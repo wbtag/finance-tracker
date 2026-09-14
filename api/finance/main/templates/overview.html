@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<script src="{% static 'js/countup.js' %}" defer></script>
+<div>
+    <div class="flex flex-wrap md:my-4 justify-center">
+        <div class="my-2 w-80 text-center">
+            <a href="/weekly-summary"}>
+                <p class="text-3xl"><span data-countup="{{weekly_spend}}">0</span> Kč</p>
+                <p>Útrata tento týden</p>
+            </a>
+        </div>
+        <div class="my-2 w-80 text-center">
+            <a href="/query">
+                <p class="text-3xl"><span data-countup="{{monthly_spend}}">0</span> Kč</p>
+                <p>Útrata tento měsíc</p>
+            </a>
+        </div>
+        <div class="my-2 w-80 text-center">
+            <a href="/balance">
+                <p class="text-3xl"><span data-countup="{{balance}}">0</span> Kč</p>
+                <p class="">Aktuální odhadovaný zůstatek</p>
+            </a>
+        </div>
+    </div>
+
+    <div class="grid justify-center">
+        <div class='inline-flex py-5 gap-x-1 w-80 justify-center'>
+            <button class="button" hx-post="/switch/" hx-vals='{"view": "week"}' hx-target="#content" hx-swap="innerHTML">Týden</button>
+            <button class="button" hx-post="/switch/" hx-vals='{"view": "month"}' hx-target="#content" hx-swap="innerHTML">Měsíc</button>
+        </div>
+        <div class="pb-4">
+            <div id="content">{% include "partials/overview_view.html" %}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

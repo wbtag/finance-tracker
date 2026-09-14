@@ -1,0 +1,10 @@
+{
+  "name": "kgrfin",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"cd frontend && pnpm dev\" \"cd api && ./venv/bin/python ./finance/manage.py runserver\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

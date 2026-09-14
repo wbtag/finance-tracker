@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div>
+        <div class="w-full max-w-2xl mx-auto px-4 sm:px-0 py-2">
+            <h1 class="text-2xl pt-4 pb-2">{week}. týden roku {year}</h1>
+            <CategoryPicker
+                categories={categories}
+                activeCategories={activeCategories}
+                setActiveCategories={setActiveCategories}
+            />
+        </div>
+        {% if len(receipts) == 0 ? %}
+            <p class="text-white/40 text-sm sm:text-base italic text-center py-6">Žádné účtenky.</p>
+        {% else %}
+            <div class="w-full max-w-xl mx-auto px-4 sm:px-0 py-2">
+                <ReceiptRenderer receipts={visibleReceipts} categories={categories} />
+                <div class="flex justify-between border-t border-white/40 py-4">
+                    <p class="text-md sm:text-md">Celkem</p>
+                    <span class="text-white/80 text-sm sm:text-base tabular-nums pr-6 sm:pr-7">
+                        {{total}} Kč
+                    </span>
+                </div>
+            </div>
+        {% endif %}
+        )}
+    </div>
+{% endblock %}
