@@ -8,7 +8,8 @@ interface SpendTableProps {
 
 export default function SpendTable({ source, other }: SpendTableProps) {
 
-    const rows = Object.entries(source);
+    const rows = Object.entries(source)
+        .sort((a,b) => b[1]?.limit - a[1].limit);
 
     return (
         <table className="w-80">
@@ -28,8 +29,8 @@ export default function SpendTable({ source, other }: SpendTableProps) {
                                 <td className="px-4 pt-4">{category}</td>
                                 <td className={`px-4 pt-4 text-right tabular-nums`}>
                                     <span className={`${over ? "text-red-500/80" : ""}`}>
-                                        {spend}
-                                    </span>/{limit} Kč
+                                        {spend}/{limit} Kč
+                                    </span>
                                 </td>
                             </tr>
                             <tr>
