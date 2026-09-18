@@ -44,9 +44,14 @@ next-env.d.ts
 
 /.vscode/
 
-migrations
-
 .idea
 
 .claude/
 CLAUDE.md
+
+# python
+__pycache__/
+*.py[cod]
+
+# local dev database
+*.sqlite3
