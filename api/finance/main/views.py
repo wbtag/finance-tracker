@@ -1,16 +1,61 @@
 import json
 import locale
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .serializers import BalanceSerializer, ReceiptSerializer
 from datetime import date, datetime, timedelta
 
 from .models import Receipt, ReceiptItem, Tag, Category, Balance, Income
+from django.contrib.auth import authenticate, login
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db.models import Sum
 from django.utils import timezone
+from django_otp import login as otp_login, match_token
 from environs import env
 
 env.read_env()
+
+@ensure_csrf_cookie
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def session(request):
+	user = request.user
+	authenticated = bool(user and user.is_authenticated)
+	return Response({
+		'authenticated': authenticated,
+		'verified': authenticated and user.is_verified(),
+	})
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+	user = authenticate(
+		request,
+		username=request.data.get('username'),
+		password=request.data.get('password'),
+	)
+	if user is None:
+		return Response({'detail': 'Invalid credentials'}, status=401)
+
+	login(request, user)
+	return Response({'mfa_required': True})
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_view(request):
+	user = request.user
+	if not user.is_authenticated:
+		return Response({'detail': 'Log in first'}, status=401)
+	if user.is_verified():
+		return Response({'username': user.get_username()})
+
+	device = match_token(user, request.data.get('code', ''))
+	if device is None:
+		return Response({'detail': 'Invalid OTP token'}, status=401)
+
+	otp_login(request, device)
+	return Response({'username': user.get_username()})
 
 @api_view(['GET'])
 def overview(request):
@@ -143,7 +188,7 @@ def receipt(request):
 
 @api_view(['GET'])
 def categories(request):
-	categories = Category.objects.values_list('name', flat=True).distinct()
+	categories = Category.objects.values_list('name', flat=True).distinct().order_by('week_limit')
 	return Response(categories)
 
 @api_view(['GET'])
