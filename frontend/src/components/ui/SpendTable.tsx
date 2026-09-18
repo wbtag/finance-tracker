@@ -1,10 +1,14 @@
 import { Fragment } from "react"
-import type { CategorySpend } from "../lib/mongoLibrary"
 
 interface SpendTableProps {
     source: Record<string, CategorySpend>;
     other: number;
-}
+};
+
+interface CategorySpend {
+    spend: number;
+    limit: number;
+};
 
 export default function SpendTable({ source, other }: SpendTableProps) {
 
