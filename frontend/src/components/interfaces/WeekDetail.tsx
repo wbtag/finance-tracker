@@ -26,7 +26,6 @@ export default function WeekDetail({ week, year }: WeekDetailProps) {
 
     const fetchCategories = async () => {
         const categories = await request('categories/');
-        // categories.push('Mandatorní');
         setCategories(categories);
         setActiveCategories(categories);
     };
