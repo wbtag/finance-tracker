@@ -1,5 +1,4 @@
 import json
-import locale
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -217,9 +216,6 @@ def balance(request):
 	else:
 		balance_data = Balance.objects.get_current_balance()
 		current_balance, income_since, spend_since, original_balance, balance_date = balance_data[0]
-
-		locale.setlocale(locale.LC_TIME, 'cs_CZ.UTF-8')
-		balance_date = balance_date.strftime('%x %H:%M')
 
 		response_data = {
 			"estimated_balance": current_balance,
