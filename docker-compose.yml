@@ -1,0 +1,64 @@
+services:
+  frontend:
+    build:
+      context: frontend
+      args:
+        API_URL: ${API_URL:-http://api:8000}
+        NEXT_PUBLIC_FiscalMonthStart: ${FISCAL_MONTH_START:?set FISCAL_MONTH_START}
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: .env.production
+        required: false
+    environment:
+      NODE_ENV: production
+      API_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  api:
+    build: api
+    container_name: django-docker
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: finance.settings.prod
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?set DJANGO_ALLOWED_HOSTS},api
+      DJANGO_CORS_ALLOWED_ORIGINS: ${DJANGO_CORS_ALLOWED_ORIGINS:?set DJANGO_CORS_ALLOWED_ORIGINS}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-false}
+      USE_PROXY_SSL_HEADER: ${USE_PROXY_SSL_HEADER:-true}
+      DATABASE_HOST: db
+    env_file:
+      - ./api/.env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8000), timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
