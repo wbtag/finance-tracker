@@ -7,6 +7,7 @@ from .serializers import BalanceSerializer, ReceiptSerializer
 from datetime import date, datetime, timedelta
 
 from .models import Receipt, ReceiptItem, Tag, Category, Balance, Income
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db.models import Sum
@@ -24,7 +25,7 @@ def session(request):
 	authenticated = bool(user and user.is_authenticated)
 	return Response({
 		'authenticated': authenticated,
-		'verified': authenticated and user.is_verified(),
+		'verified': authenticated and (user.is_verified() or not settings.OTP_REQUIRED),
 	})
 
 @api_view(['POST'])
@@ -39,7 +40,7 @@ def login_view(request):
 		return Response({'detail': 'Invalid credentials'}, status=401)
 
 	login(request, user)
-	return Response({'mfa_required': True})
+	return Response({'mfa_required': settings.OTP_REQUIRED})
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -47,7 +48,7 @@ def verify_view(request):
 	user = request.user
 	if not user.is_authenticated:
 		return Response({'detail': 'Log in first'}, status=401)
-	if user.is_verified():
+	if user.is_verified() or not settings.OTP_REQUIRED:
 		return Response({'username': user.get_username()})
 
 	device = match_token(user, request.data.get('code', ''))

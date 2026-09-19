@@ -1,5 +1,7 @@
 """Local development settings. Default for manage.py."""
 
+from environs import env
+
 from .base import *  # noqa: F403
 
 DEBUG = True
@@ -11,3 +13,7 @@ CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
 CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
 
 # Cookies stay non-Secure: dev runs over plain http.
+
+# Skip the TOTP step locally: set OTP_REQUIRED=false to log in with just
+# username/password.
+OTP_REQUIRED = env.bool('OTP_REQUIRED', False)

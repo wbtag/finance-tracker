@@ -47,6 +47,10 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Hardcoded on purpose: only dev.py may relax this, so no prod env var can
+# turn off the second factor.
+OTP_REQUIRED = True
+
 ROOT_URLCONF = 'finance.urls'
 
 TEMPLATES = [
