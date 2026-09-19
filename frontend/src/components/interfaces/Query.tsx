@@ -23,7 +23,7 @@ export default function Query({ period }: { period?: string }) {
 
     const date = new Date();
 
-    const fiscalMonthStart = parseInt(process.env['NEXT_PUBLIC_FiscalMonthStart'] || '');
+    const fiscalMonthStart = parseInt(process.env['NEXT_PUBLIC_FiscalMonthStart'] || '1');
 
     const initialState: QueryFormState = {
         timeframe: 'fiscalMonth',
@@ -60,12 +60,14 @@ export default function Query({ period }: { period?: string }) {
                     fromDate.setDate(date.getDate() - 6);
                     break;
                 case "fiscalMonth":
-                    if (date.getDate() >= fiscalMonthStart) {
-                        fromDate.setDate(fiscalMonthStart + 1);
-                    } else {
-                        fromDate.setMonth(date.getMonth() - 1)
-                        fromDate.setDate(fiscalMonthStart) + 1;
+                    // Day goes to 1 first: setMonth() on the 29th-31st can roll
+                    // into the following month.
+                    fromDate.setDate(1);
+                    if (date.getDate() < fiscalMonthStart) {
+                        fromDate.setMonth(date.getMonth() - 1);
                     }
+                    fromDate.setDate(fiscalMonthStart + 1);
+                    break;
                 case "month":
                     fromDate.setDate(1);
                     break;
