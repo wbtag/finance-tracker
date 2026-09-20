@@ -5,6 +5,3 @@ django-otp==1.7.0
 environs==15.0.1
 psycopg2-binary==2.9.12
 gunicorn==26.2.0
-
-# migrate_mongo management command only
-pymongo==4.17.0
