@@ -1,5 +1,6 @@
 {
-  "name": "kgrfin",
+  "name": "finance-tracker",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "concurrently \"cd frontend && pnpm dev\" \"cd api && ./venv/bin/python ./finance/manage.py runserver\""
