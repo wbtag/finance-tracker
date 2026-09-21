@@ -8,8 +8,6 @@ RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /frontend
-ARG NEXT_PUBLIC_FiscalMonthStart
-ENV NEXT_PUBLIC_FiscalMonthStart=$NEXT_PUBLIC_FiscalMonthStart
 # rewrites() is evaluated by `next build`, so the API origin is baked in here.
 ARG API_URL=http://api:8000
 ENV API_URL=$API_URL

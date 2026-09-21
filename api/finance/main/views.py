@@ -12,9 +12,16 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db.models import Sum
 from django.utils import timezone
 from django_otp import login as otp_login, match_token
-from environs import env
 
-env.read_env()
+fiscal_month_start = settings.FISCAL_MONTH_START
+offset = 1 if settings.SUNDAY_WEEK_START else 0
+
+@api_view(['GET'])
+def config(request):
+	return Response({
+		'fiscalMonthStart': fiscal_month_start,
+		'sundayWeekStart': settings.SUNDAY_WEEK_START,
+	})
 
 @ensure_csrf_cookie
 @api_view(['GET'])
@@ -64,12 +71,14 @@ def overview(request):
 	if now.weekday() != 6:
 		cutoff = now - timedelta(days=now.weekday()+1)
 
-	fiscal_month_start = int(env("FISCAL_MONTH_START"))
-
 	week_spend = Receipt.objects.filter(date__gte=cutoff).aggregate(Sum("amount"))
 	month_cutoff = cutoff.replace(day=fiscal_month_start)
-	if month_cutoff.day < fiscal_month_start:
-		month_cutoff = month_cutoff.replace(month=month_cutoff.month - 1)
+	if cutoff.day < fiscal_month_start:
+		# Fiscal month has not begun yet this calendar month; step back one.
+		if month_cutoff.month == 1:
+			month_cutoff = month_cutoff.replace(year=month_cutoff.year - 1, month=12)
+		else:
+			month_cutoff = month_cutoff.replace(month=month_cutoff.month - 1)
 	month_spend = Receipt.objects.filter(date__gte=month_cutoff).aggregate(Sum("amount"))
 
 	week_category_spend = Category.objects.get_weekly_category_spend(cutoff)
@@ -257,7 +266,7 @@ def weekly_summary(request):
 @api_view(['GET'])
 def week_detail(request, year, week):
 	mon = date.fromisocalendar(year, week, 1)
-	start = mon - timedelta(days=1)  # Sunday
-	end = mon + timedelta(days=5)
+	start = mon - timedelta(days=offset)
+	end = mon + timedelta(days=6 - offset)
 	receipts = Receipt.objects.query_receipts(start, end, tags=[], ascending=True)
 	return Response(receipts)

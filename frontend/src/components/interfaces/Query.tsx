@@ -1,5 +1,8 @@
 'use client'
 
+// TODO: Selected categories should persist with re-fetch
+// TODO: Visibly show data reload on re-fetch
+
 import { RawTags } from "@/app/types/tags";
 import { Receipt } from "@/app/types/receipt";
 
@@ -19,20 +22,25 @@ interface QueryFormState {
     categories: string[];
 }
 
+// Start of the fiscal month containing `date`. A month of -1 rolls back a year
+// on its own. The +1 matches the previous behaviour.
+function fiscalMonthStartDate(date: Date, fiscalMonthStart: number): Date {
+    return new Date(
+        date.getFullYear(),
+        date.getDate() >= fiscalMonthStart ?
+            date.getMonth() : date.getMonth() - 1,
+        fiscalMonthStart + 1
+    );
+}
+
 export default function Query({ period }: { period?: string }) {
 
-    const date = new Date();
-
-    const fiscalMonthStart = parseInt(process.env['NEXT_PUBLIC_FiscalMonthStart'] || '1');
+    // Served by the API so the value is not baked into the frontend build.
+    const [fiscalMonthStart, setFiscalMonthStart] = useState<number | null>(null);
 
     const initialState: QueryFormState = {
         timeframe: 'fiscalMonth',
-        from: new Date(
-            date.getFullYear(),
-            date.getDate() >= fiscalMonthStart ?
-                date.getMonth() : date.getMonth() - 1,
-            fiscalMonthStart + 1
-        ).toISOString().split('T')[0],
+        from: '',
         to: new Date().toISOString().split('T')[0],
         queryTags: [],
         categories: []
@@ -60,13 +68,8 @@ export default function Query({ period }: { period?: string }) {
                     fromDate.setDate(date.getDate() - 6);
                     break;
                 case "fiscalMonth":
-                    // Day goes to 1 first: setMonth() on the 29th-31st can roll
-                    // into the following month.
-                    fromDate.setDate(1);
-                    if (date.getDate() < fiscalMonthStart) {
-                        fromDate.setMonth(date.getMonth() - 1);
-                    }
-                    fromDate.setDate(fiscalMonthStart + 1);
+                    if (fiscalMonthStart === null) return;
+                    fromDate.setTime(fiscalMonthStartDate(date, fiscalMonthStart).getTime());
                     break;
                 case "month":
                     fromDate.setDate(1);
@@ -113,10 +116,21 @@ export default function Query({ period }: { period?: string }) {
         }));
     }
 
+    // The initial query waits on the config, since it sets the default range.
+    const initFromConfig = async () => {
+        const config = await request('config/');
+        setFiscalMonthStart(config.fiscalMonthStart);
+
+        const from = fiscalMonthStartDate(new Date(), config.fiscalMonthStart)
+            .toISOString().split('T')[0];
+        changeFormData((prevState) => ({ ...prevState, from }));
+        query({ from, to: formData.to });
+    }
+
     useEffect(() => {
         fetchTags();
         fetchCategories();
-        query({ from: formData.from, to: formData.to });
+        initFromConfig();
     }, []);
 
     useEffect(() => {

@@ -1,15 +1,12 @@
 services:
   frontend:
+    container_name: "finance-tracker-frontend"
     build:
       context: frontend
       args:
-        API_URL: ${API_URL:-http://api:8000}
-        NEXT_PUBLIC_FiscalMonthStart: ${FISCAL_MONTH_START:?set FISCAL_MONTH_START}
+        API_URL: "http://api:8000"
     ports:
       - "3000:3000"
-    env_file:
-      - path: .env.production
-        required: false
     environment:
       NODE_ENV: production
       API_URL: http://api:8000
@@ -20,7 +17,7 @@ services:
 
   api:
     build: api
-    container_name: django-docker
+    container_name: "finance-tracker-api"
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
@@ -33,8 +30,11 @@ services:
       SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-false}
       USE_PROXY_SSL_HEADER: ${USE_PROXY_SSL_HEADER:-true}
       DATABASE_HOST: db
+      CONFIG_PATH: /api/config.toml
     env_file:
-      - ./api/.env
+      - ./.env
+    volumes:
+      - ./config.toml:/api/config.toml:ro
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8000), timeout=3)"]
       interval: 10s
@@ -45,6 +45,7 @@ services:
 
   db:
     image: postgres:17
+    container_name: "finance-tracker-db"
     environment:
       POSTGRES_DB: ${DATABASE_NAME}
       POSTGRES_USER: ${DATABASE_USER}

@@ -55,3 +55,6 @@ __pycache__/
 
 # local dev database
 *.sqlite3
+
+# app config
+config.toml
