@@ -87,22 +87,22 @@ def overview(request):
 	balance_data = Balance.objects.get_current_balance()
 	balance = balance_data[0][0]
 
-	excluded_categories = [cat for cat in env('SPEND_OVERVIEW_EXCLUDED_CATEGORIES', "").split(',')]
-
 	data = {
 		"weekly_spend": week_spend["amount__sum"] if week_spend["amount__sum"] else 0,
 		"monthly_spend": month_spend["amount__sum"] if month_spend["amount__sum"] else 0,
 		"balance": balance,
-		"weekly_spend_categories": {k: v for (k, v) in week_category_spend.items() if k not in excluded_categories},
-		"monthly_spend_categories": {k: v for (k, v) in month_category_spend.items() if k not in excluded_categories},
-		"other": {'week': week_category_spend['Jiné']['spend'], 'month': month_category_spend['Jiné']['spend']}
+		"weekly_spend_categories": {k:v for (k,v) in week_category_spend.items() if not v['exclude']},
+		"monthly_spend_categories": {k:v for (k,v) in month_category_spend.items() if not v['exclude']},
+		"other": {
+			'week': sum([v['spend'] for (k,v) in week_category_spend.items() if v['is_misc']]),
+			'month': sum([v['spend'] for (k,v) in month_category_spend.items() if v['is_misc']]),
+		}
 	}
 
 	return Response(data)
 
 @api_view(['POST', 'PUT', 'DELETE'])
 def receipt(request):
-	offset = 1 if env.bool('SUNDAY_WEEK_START', default=False) else 0
 	if request.method == 'POST':
 		d = datetime.fromisoformat(request.data['date'])
 		iso = (d+ timedelta(days=offset)).isocalendar()
@@ -197,7 +197,7 @@ def receipt(request):
 
 @api_view(['GET'])
 def categories(request):
-	categories = Category.objects.values_list('name', flat=True).distinct().order_by('week_limit')
+	categories = Category.objects.values_list('name', flat=True).distinct().order_by('-week_limit')
 	return Response(categories)
 
 @api_view(['GET'])

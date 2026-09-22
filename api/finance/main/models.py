@@ -104,34 +104,45 @@ class CategoryManager(models.Manager):
 		with connection.cursor() as cursor:
 			cursor = connection.connection.cursor(cursor_factory=RealDictCursor)
 			cursor.execute("""
-				SELECT c.id, c.name, c.week_limit, COALESCE(SUM(r.amount),0) as amount
+				SELECT c.id, c.name, c.week_limit, c.is_misc, c.exclude_from_overview as exclude, COALESCE(SUM(r.amount),0) as amount
 				FROM main_receipt r
 				RIGHT JOIN main_category c ON r.category_id = c.id AND r.date >= %s
 				GROUP BY c.name, c.id, c.week_limit
 				ORDER BY c.week_limit DESC
 				""", [cutoff])
 			output = [dict(row) for row in cursor.fetchall()]
-			return {row['name']: {'spend': row['amount'], 'limit': row['week_limit']} for row in output}
+			return {row['name']: {
+				'spend': row['amount'],
+				'limit': row['week_limit'],
+				'exclude': row['exclude'],
+				'is_misc': row['is_misc']
+			} for row in output}
 
 	def get_monthly_category_spend(self, cutoff):
 		with connection.cursor() as cursor:
 			cursor = connection.connection.cursor(cursor_factory=RealDictCursor)
 			cursor.execute("""
-					SELECT c.id, c.name, c.month_limit, COALESCE(SUM(r.amount),0) as amount
+					SELECT c.id, c.name, c.month_limit, c.is_misc, c.exclude_from_overview as exclude, COALESCE(SUM(r.amount),0) as amount
 					FROM main_receipt r
 					RIGHT JOIN main_category c ON r.category_id = c.id AND r.date >= %s
 					GROUP BY c.name, c.id, c.month_limit
 					ORDER BY c.month_limit DESC
 				""", [cutoff])
 			output = [dict(row) for row in cursor.fetchall()]
-			return {row['name']: {'spend': row['amount'], 'limit': row['month_limit']} for row in output}
+			return {row['name']: {
+				'spend': row['amount'],
+				'limit': row['month_limit'],
+				'exclude': row['exclude'],
+				'is_misc': row['is_misc']
+			} for row in output}
 
 class Tag(models.Model):
 	name = models.CharField(max_length=50)
 
 class Category(models.Model):
 	name = models.CharField(max_length=255)
-	has_limit = models.BooleanField(default=True)
+	exclude_from_overview = models.BooleanField(default=False)
+	is_misc = models.BooleanField(default=False)
 	week_limit = models.IntegerField()
 	month_limit = models.IntegerField()
 
