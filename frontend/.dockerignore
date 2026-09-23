@@ -12,3 +12,9 @@ playwright-report
 test-results
 .auth
 .claude
+pnpm-workspace.yaml
+tsconfig.json
+tsconfig.tsbuildinfo
+postcss.config.mjs
+next-env.d.ts
+next.config.mjs

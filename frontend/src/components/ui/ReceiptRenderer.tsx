@@ -3,7 +3,8 @@ import { ReceiptParams, ReceiptItems } from "./elements/receiptElements";
 import { useStateHandler } from "../lib/useStateHandler";
 import { useEffect } from "react";
 import { request } from "@/components/lib/request";
-import { Receipt } from "@/app/types/receipt";
+import { Receipt, RawReceiptItem } from "@/app/types/receipt";
+import { RawTags } from "@/app/types/tags";
 
 interface ReceiptRendererProps {
     receipts: Receipt[];
@@ -162,6 +163,37 @@ function ReceiptRow({ receipt, categories, tags }: ReceiptRowProps) {
     )
 }
 
+function toDateInputValue(date: number | string) {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function normalizeTags(tags: RawTags | undefined): string[] {
+    if (!tags) return [];
+    if (typeof tags === 'string') {
+        const trimmed = tags.trim();
+        if (!trimmed) return [];
+        try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) return normalizeTags(parsed);
+        } catch {
+            return trimmed.split(',').map(t => t.trim()).filter(Boolean);
+        }
+        return [trimmed];
+    }
+    return tags
+        .map(t => (typeof t === 'string' ? t : t.value))
+        .map(t => t.trim())
+        .filter(Boolean);
+}
+
+function normalizeItems(items: RawReceiptItem[] | undefined) {
+    return (items ?? []).map(item => ({
+        amount: Number(item.amount),
+        tags: normalizeTags(item.tags),
+    }));
+}
+
 interface ReceiptEditFormProps {
     receipt: Receipt;
     tags: string[];
@@ -172,12 +204,12 @@ interface ReceiptEditFormProps {
 
 function ReceiptEditForm({ receipt, tags, categories, onCancel, onSaved }: ReceiptEditFormProps) {
 
-    const {date, ...rest} = receipt;
-    const receiptDate = new Date(date);
+    const {date, items, ...rest} = receipt;
 
     const stateHandler = useStateHandler({
-        date: `${receiptDate.getFullYear()}-${String(receiptDate.getMonth() + 1).padStart(2, '0')}-${String(receiptDate.getDate()).padStart(2, '0')}`,
-        ...rest
+        date: toDateInputValue(date),
+        ...rest,
+        ...(items ? { items: items.map(item => ({ ...item, tags: [...item.tags] })) } : {}),
     });
 
     const { formData } = stateHandler;
@@ -198,11 +230,24 @@ function ReceiptEditForm({ receipt, tags, categories, onCancel, onSaved }: Recei
             for (const [key, value] of Object.entries(form)) {
                 switch (key) {
                     case 'date':
-                        const date = new Date(value as string).toISOString().split('T')[0];
-                        if (date != value) {
-                            editPayload.date = date;
+                        if (value != toDateInputValue(receipt.date)) {
+                            editPayload.date = value;
                         }
                         break;
+                    case 'tags': {
+                        const formTags = normalizeTags(value as RawTags);
+                        if (JSON.stringify(formTags) != JSON.stringify(normalizeTags(receipt.tags))) {
+                            editPayload.tags = formTags;
+                        }
+                        break;
+                    }
+                    case 'items': {
+                        const formItems = normalizeItems(value as RawReceiptItem[]);
+                        if (JSON.stringify(formItems) != JSON.stringify(normalizeItems(receipt.items))) {
+                            editPayload.items = formItems;
+                        }
+                        break;
+                    }
                     case 'id':
                         break;
                     default:

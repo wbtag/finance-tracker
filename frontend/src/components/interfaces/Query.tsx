@@ -33,14 +33,11 @@ function fiscalMonthStartDate(date: Date, fiscalMonthStart: number): Date {
     );
 }
 
-export default function Query({ period }: { period?: string }) {
-
-    // Served by the API so the value is not baked into the frontend build.
-    const [fiscalMonthStart, setFiscalMonthStart] = useState<number | null>(null);
+export default function Query({ period, fiscalMonthStart }: { period?: string; fiscalMonthStart: number }) {
 
     const initialState: QueryFormState = {
         timeframe: 'fiscalMonth',
-        from: '',
+        from: fiscalMonthStartDate(new Date(), fiscalMonthStart).toISOString().split('T')[0],
         to: new Date().toISOString().split('T')[0],
         queryTags: [],
         categories: []
@@ -68,7 +65,6 @@ export default function Query({ period }: { period?: string }) {
                     fromDate.setDate(date.getDate() - 6);
                     break;
                 case "fiscalMonth":
-                    if (fiscalMonthStart === null) return;
                     fromDate.setTime(fiscalMonthStartDate(date, fiscalMonthStart).getTime());
                     break;
                 case "month":
@@ -108,7 +104,6 @@ export default function Query({ period }: { period?: string }) {
 
     const fetchCategories = async () => {
         const response = await request('categories/');
-        categories.push('Mandatorní');
         setCategories(response);
         changeFormData((prevState) => ({
             ...prevState,
@@ -116,21 +111,10 @@ export default function Query({ period }: { period?: string }) {
         }));
     }
 
-    // The initial query waits on the config, since it sets the default range.
-    const initFromConfig = async () => {
-        const config = await request('config/');
-        setFiscalMonthStart(config.fiscalMonthStart);
-
-        const from = fiscalMonthStartDate(new Date(), config.fiscalMonthStart)
-            .toISOString().split('T')[0];
-        changeFormData((prevState) => ({ ...prevState, from }));
-        query({ from, to: formData.to });
-    }
-
     useEffect(() => {
         fetchTags();
         fetchCategories();
-        initFromConfig();
+        query();
     }, []);
 
     useEffect(() => {

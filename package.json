@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "setup:api": "python3 -m venv api/venv && api/venv/bin/pip install -r api/requirements.txt",
     "dev": "concurrently \"cd frontend && pnpm dev\" \"cd api && ./venv/bin/python ./finance/manage.py runserver\""
   },
   "devDependencies": {

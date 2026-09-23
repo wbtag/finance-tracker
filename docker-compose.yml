@@ -10,6 +10,9 @@ services:
     environment:
       NODE_ENV: production
       API_URL: http://api:8000
+      CONFIG_PATH: /frontend/config.toml
+    volumes:
+      - ./config.toml:/frontend/config.toml:ro
     depends_on:
       api:
         condition: service_healthy

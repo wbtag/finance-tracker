@@ -1,4 +1,5 @@
 import Query from "@/components/interfaces/Query";
+import { getConfig } from "@/components/lib/config";
 
 export default async function ReceiptPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
 
@@ -7,7 +8,7 @@ export default async function ReceiptPage({ searchParams }: { searchParams: Prom
     return (
         <>
             <div>
-                <Query period={params.period} />
+                <Query period={params.period} fiscalMonthStart={getConfig().fiscalMonthStart} />
             </div>
         </>
     )
