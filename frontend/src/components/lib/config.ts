@@ -16,7 +16,7 @@ let config: AppConfig | undefined;
 function loadConfig(): AppConfig {
     let raw: RawConfig;
     try {
-        raw = parse(readFileSync(CONFIG_PATH, 'utf8')) as RawConfig;
+        raw = parse(readFileSync(/*turbopackIgnore: true*/ CONFIG_PATH, 'utf8')) as RawConfig;
     } catch (e) {
         if (e instanceof TomlError) {
             throw new Error(`Malformed TOML in ${CONFIG_PATH}: ${e.message}`);

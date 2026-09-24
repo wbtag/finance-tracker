@@ -4,12 +4,15 @@ import React from "react";
 import Navigation from '@/components/ui/Navigation';
 import { getConfig } from '@/components/lib/config';
 
-const { appName } = getConfig();
+// Config is mounted at runtime, not available during `next build`, so never prerender.
+export const dynamic = 'force-dynamic';
 
-export const metadata = {
-  title: appName,
-  description: "",
-};
+export function generateMetadata() {
+  return {
+    title: getConfig().appName,
+    description: "",
+  };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
