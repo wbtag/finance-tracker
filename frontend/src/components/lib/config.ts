@@ -3,12 +3,13 @@ import path from 'node:path';
 import { parse, TomlError } from 'smol-toml';
 
 export interface AppConfig {
+    appName: string;
     fiscalMonthStart: number;
 }
 
 const CONFIG_PATH = process.env.CONFIG_PATH ?? path.resolve(process.cwd(), '..', 'config.toml');
 
-type RawConfig = { Budgets?: { month_start?: unknown } };
+type RawConfig = { App?: { name?: string }, Budgets?: { month_start?: unknown } };
 
 let config: AppConfig | undefined;
 
@@ -31,7 +32,12 @@ function loadConfig(): AppConfig {
         throw new Error(`month_start must be between 1 and 28, got ${fiscalMonthStart}`);
     }
 
-    return { fiscalMonthStart };
+    const appName = raw.App?.name;
+    if (typeof appName !== 'string' || !appName) {
+        throw new Error(`App.name must be a non-empty string, got ${appName}`);
+    }
+
+    return { fiscalMonthStart, appName };
 }
 
 export function getConfig(): AppConfig {

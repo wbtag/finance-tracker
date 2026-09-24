@@ -2,7 +2,7 @@
 
 from environs import env
 
-from .base import *  # noqa: F403
+from .base import *
 
 DEBUG = False
 
@@ -19,8 +19,33 @@ SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', 31536000)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# Only enable behind a reverse proxy that strips client-supplied
-# X-Forwarded-Proto. Otherwise a client can forge it and defeat the
-# redirect above.
 if env.bool('USE_PROXY_SSL_HEADER', False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': env.str('DJANGO_LOG_LEVEL', 'INFO'),
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}

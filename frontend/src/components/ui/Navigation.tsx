@@ -4,13 +4,13 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export default function Navigation() {
+export default function Navigation({ appName }: { appName: string }) {
     const [open, setOpen] = useState(false);
 
     return (
         <>
-            <DesktopNavigation />
-            <MobileNavigation onClick={() => setOpen(!open)} open={open} setOpen={setOpen} />
+            <DesktopNavigation appName={appName} />
+            <MobileNavigation onClick={() => setOpen(!open)} open={open} setOpen={setOpen} appName={appName} />
         </>
     );
 }
@@ -19,9 +19,10 @@ interface MobileNavigationProps {
     onClick: () => void;
     open: boolean;
     setOpen: (open: boolean) => void;
+    appName: string;
 }
 
-function MobileNavigation({ onClick, open, setOpen }: MobileNavigationProps) {
+function MobileNavigation({ onClick, open, setOpen, appName }: MobileNavigationProps) {
     const path = usePathname();
 
     if (path.includes("login")) {
@@ -41,7 +42,7 @@ function MobileNavigation({ onClick, open, setOpen }: MobileNavigationProps) {
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="flex flex-row items-center pb-2">
-                        <h2 className="text-xl font-semibold text-white/90 w-100">Finanční portál rodiny Gregerovy</h2>
+                        <h2 className="text-xl font-semibold text-white/90 w-100">{appName}</h2>
                         <div className="flex justify-end">
                             <button onClick={() => setOpen(false)} className="p-2">
                                 <X size={24} />
@@ -61,7 +62,7 @@ function MobileNavigation({ onClick, open, setOpen }: MobileNavigationProps) {
     )
 }
 
-function DesktopNavigation() {
+function DesktopNavigation({ appName }: { appName: string }) {
 
     const path = usePathname();
 
@@ -72,7 +73,7 @@ function DesktopNavigation() {
     return (
         <>
             <nav className="hidden md:flex items-center p-4 shadow border-white/40 border-b-1">
-                <h1 className="text-xl font-semibold text-white/90 pl-6 pr-2">Finanční portál rodiny Gregerovy</h1>
+                <h1 className="text-xl font-semibold text-white/90 pl-6 pr-2">{appName}</h1>
                 <ul className="flex gap-10 pl-20 text-white/80">
                     <li><Link href="/">Přehled</Link></li>
                     <li><Link href="/receipt">Nová útrata</Link></li>

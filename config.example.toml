@@ -1,5 +1,8 @@
 # App configuration
 
+[App]
+name = 'Finance tracker'
+
 [Budgets]
 month_start = 15 # must be between 1 and 28
 sunday_week_start = false
