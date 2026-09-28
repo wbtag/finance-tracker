@@ -1,8 +1,9 @@
 'use client'
 import { useEffect, useState, type MouseEvent } from "react";
 import AnimateValue from "../ui/AnimateValue";
-import { Input } from "../ui/elements/formElements";
+import { Input, FieldError } from "../ui/elements/formElements";
 import { useStateHandler } from "../lib/useStateHandler";
+import { useValidation, isBlank, isInteger, isPositiveInteger } from "../lib/useValidation";
 import {request} from "@/components/lib/request";
 
 interface BalanceDTO {
@@ -72,12 +73,24 @@ export default function Balance() {
 
     const incomeStateHandler = useStateHandler(incomeInitialState);
 
+    const balanceValidation = useValidation({
+        balance: ({ balance }: typeof balanceInitialState) => !isInteger(balance),
+    });
+
+    const incomeValidation = useValidation({
+        amount: ({ amount }: typeof incomeInitialState) => !isPositiveInteger(amount),
+        description: ({ description }: typeof incomeInitialState) => isBlank(description),
+    });
+
     const submitForm = async (e: MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
 
-        setSaving(true);
-
         const formId = (e.target as HTMLButtonElement).form?.id;
+
+        if (formId === 'balance' && !balanceValidation.validate(balanceStateHandler.formData)) return;
+        if (formId === 'income' && !incomeValidation.validate(incomeStateHandler.formData)) return;
+
+        setSaving(true);
 
         if (formId === 'balance') {
             const newBalanceData = await request('balance/', {
@@ -142,7 +155,9 @@ export default function Balance() {
                     <form className="my-3 w-100" id="income">
                         <p className="text-xl">Nový příjem</p>
                         <Input label="Popis" name="description" handler={incomeStateHandler} />
+                        <FieldError show={incomeValidation.errors.description}>Popis chybí</FieldError>
                         <Input label="Částka" name="amount" type="number" handler={incomeStateHandler} />
+                        <FieldError show={incomeValidation.errors.amount}>Neplatná částka</FieldError>
                         <button
                             className="button button--active mt-3"
                             onClick={submitForm}
@@ -152,6 +167,7 @@ export default function Balance() {
                     <form className="my-3 w-80" id="balance">
                         <p className="text-xl">Aktualizace zůstatku</p>
                         <Input label="Nový zůstatek" type="number" name="balance" handler={balanceStateHandler} />
+                        <FieldError show={balanceValidation.errors.balance}>Neplatný zůstatek</FieldError>
                         <button
                             className="button button--active mt-3"
                             onClick={submitForm}

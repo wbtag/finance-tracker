@@ -1,11 +1,14 @@
 'use client'
-import React, { useEffect, useRef, useState, type MouseEvent } from "react";
+import React, {useEffect, useState, type MouseEvent } from "react";
 import { useStateHandler } from "../lib/useStateHandler";
 import { ReceiptType, RawReceiptItem } from "@/app/types/receipt";
 import { RawTags } from "@/app/types/tags";
 import Switcher from "../ui/Switcher";
 import { ReceiptParams, ReceiptItems } from "../ui/elements/receiptElements";
 import {request} from "@/components/lib/request";
+import { useValidation } from "../lib/useValidation";
+import { receiptRules } from "../lib/receiptValidation";
+import { normalizeItems, normalizeTags } from "../lib/tags";
 
 interface NewReceiptFormState {
     date: string;
@@ -13,15 +16,15 @@ interface NewReceiptFormState {
     description: string;
     category: string;
     tags: RawTags;
-    items: RawReceiptItem[];
+    items?: RawReceiptItem[];
 }
 
-export default function NewReceipt() {
+export default function NewReceipt( { categories }: { categories: string[] } ) {
 
     const [receiptType, setReceiptType] = useState<ReceiptType>('simple');
     const [tags, setTags] = useState<string[]>([]);
-    const [categories, setCategories] = useState<string[]>([]);
     const [saving, setSaving] = useState(false);
+    const { errors, validate } = useValidation(receiptRules(receiptType));
 
     const handleReceiptTypeChange = (e: MouseEvent<HTMLButtonElement>) => {
         const name = (e.target as HTMLButtonElement).name as ReceiptType;
@@ -32,20 +35,15 @@ export default function NewReceipt() {
                     items: [{ amount: 0, tags: [''] }]
                 });
             }
-        } else if (name === 'mandatory') {
-            stateHandler.changeFormData({
-                ...stateHandler.formData,
-                category: 'Mandatorní'
-            });
         }
         setReceiptType(name);
     };
 
     const initialState: NewReceiptFormState = {
         date: new Date().toISOString().split('T')[0],
-        amount: 0,
+        amount: '',
         description: '',
-        category: '',
+        category: categories[0] ?? '',
         tags: [],
         items: [{ amount: 0, tags: [''] }]
     }
@@ -56,16 +54,14 @@ export default function NewReceipt() {
     const submitForm = async (e: MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
 
-        setSaving(true);
-
-        if (
-            receiptType != "extended" ||
-            Number(formData.amount) - formData.items.reduce((acc, curr) => acc + Number(curr.amount), 0) === 0
-        ) {
+        if (validate(formData)) {
+            setSaving(true);
 
             const receiptBody = {
                 ...formData,
-                type: receiptType
+                type: receiptType,
+                tags: normalizeTags(formData.tags),
+                items: receiptType === "extended" ? normalizeItems(formData.items) : undefined,
             };
 
             try {
@@ -81,17 +77,15 @@ export default function NewReceipt() {
                     window.alert(`Chyba: ${response.error}`);
                 } else {
                     window.alert('Účtenka úspěšně zaevidována');
-                };
+                    stateHandler.clearForm();
+                }
 
-                stateHandler.clearForm();
             } catch (e) {
                 window.alert(e instanceof Error ? e.message : String(e));
             }
-        } else {
-            window.alert("Chyba: Součet položek v rozšířené účtence se musí rovnat celkové hodnotě účtenky.");
-        }
 
-        setSaving(false);
+            setSaving(false);
+        }
     };
 
     const fetchTags = async () => {
@@ -99,15 +93,8 @@ export default function NewReceipt() {
         setTags(tags);
     };
 
-    const fetchCategories = async () => {
-        const response = await request('categories/');
-        setCategories(response);
-    }
-
-
     useEffect(() => {
         fetchTags();
-        fetchCategories();
     }, []);
 
     return (
@@ -118,14 +105,19 @@ export default function NewReceipt() {
                     <div className='inline-flex gap-1'>
                         <Switcher name='simple' text='Základní' stateTracker={receiptType} changeHandler={handleReceiptTypeChange} />
                         <Switcher name='extended' text='Rozšířená' stateTracker={receiptType} changeHandler={handleReceiptTypeChange} />
-                        <Switcher name='mandatory' text='Mandatorní' stateTracker={receiptType} changeHandler={handleReceiptTypeChange} />
                     </div>
                     <div className="">
-                        <ReceiptParams handler={stateHandler} tags={tags} categories={categories} type={receiptType} />
+                        <ReceiptParams
+                            handler={stateHandler}
+                            tags={tags}
+                            categories={categories}
+                            type={receiptType}
+                            validationErrors={errors}
+                        />
                         {
                             receiptType === "extended" ?
                                 <div className="mb-2">
-                                    <ReceiptItems handler={stateHandler} tags={tags} />
+                                    <ReceiptItems handler={stateHandler} tags={tags} validationErrors={errors} />
                                 </div>
                                 : <div />
                         }

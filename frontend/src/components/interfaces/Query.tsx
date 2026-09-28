@@ -13,6 +13,7 @@ import { TagInput } from "../ui/elements/receiptElements";
 import ReceiptRenderer from "../ui/ReceiptRenderer";
 import CategoryPicker from "../ui/CategoryPicker";
 import { request } from "@/components/lib/request";
+import { normalizeTags } from "../lib/tags";
 
 interface QueryFormState {
     timeframe: string;
@@ -138,7 +139,7 @@ export default function Query({ period, fiscalMonthStart }: { period?: string; f
             body: JSON.stringify({
                 from,
                 to,
-                tags: formData.queryTags,
+                tags: normalizeTags(formData.queryTags),
                 offset: 0,
                 limit: 200,
             })

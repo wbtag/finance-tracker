@@ -1,20 +1,23 @@
-import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from .serializers import BalanceSerializer, ReceiptSerializer
+from .serializers import BalanceSerializer, ReceiptSerializer, ReceiptRequestSerializer
 from datetime import date, datetime, timedelta
 
 from .models import Receipt, ReceiptItem, Tag, Category, Balance, Income
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 from django_otp import login as otp_login, match_token
 
 fiscal_month_start = settings.FISCAL_MONTH_START
 offset = 1 if settings.SUNDAY_WEEK_START else 0
+
+def get_tags(names):
+	return [Tag.objects.get_or_create(name=name)[0] for name in names]
 
 @api_view(['GET'])
 def config(request):
@@ -104,88 +107,80 @@ def overview(request):
 @api_view(['POST', 'PUT', 'DELETE'])
 def receipt(request):
 	if request.method == 'POST':
-		d = datetime.fromisoformat(request.data['date'])
+
+		validated_payload = ReceiptRequestSerializer(data=request.data)
+		validated_payload.is_valid(raise_exception=True)
+
+		payload = validated_payload.validated_data
+
+		try:
+			d = datetime.fromisoformat(payload['date'])
+		except TypeError:
+			return Response({ 'error': f'Received invalid date' }, status=400)
+
 		iso = (d+ timedelta(days=offset)).isocalendar()
 
 		receipt_date = timezone.now().isoformat() if d.date() == timezone.now().date() else d.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
 
-		receipt_type = request.data.get('type')
-		category = Category.objects.get(name=request.data['category'])
+		receipt_type = payload.get('type')
+		category = Category.objects.get(name=payload['category'])
 
 		new_receipt = Receipt.objects.create(
 			date=receipt_date,
 			category=category,
 			type=receipt_type,
-			description=request.data['description'],
-			amount=request.data['amount'],
+			description=payload['description'],
+			amount=payload['amount'],
 			week=iso[1],
 			year=iso[0],
 		)
 
-		tags_raw = request.data.get('tags', '')
-		tag_names = []
-
-		if tags_raw:
-			try:
-				tag_names = [t['value'] for t in json.loads(tags_raw)]
-			except (ValueError, TypeError, KeyError):
-				tag_names = [t.strip() for t in tags_raw.split(',') if t.strip()]
-				print(f"receipt tag names {tag_names}")
-
-		tags = [Tag.objects.get_or_create(name=name)[0] for name in tag_names]
-		for tag in tags:
-			new_receipt.tags.add(tag)
+		new_receipt.tags.set(get_tags(payload['tags']))
 
 		if receipt_type == 'extended':
-			for item in request.data.get('items'):
+			for item in payload.get('items', []):
 				receipt_item = ReceiptItem.objects.create(
 					receipt=new_receipt,
 					amount=item['amount']
 				)
-
-				item_tag_names = [t['value'] for t in json.loads(item['tags'])]
-
-				tags = [Tag.objects.get_or_create(name=name)[0] for name in item_tag_names]
-
-				for tag in tags:
-					receipt_item.tags.add(tag)
+				receipt_item.tags.set(get_tags(item['tags']))
 
 		return Response(new_receipt.id, status=201)
 	elif request.method == 'PUT':
 		receipt = Receipt.objects.get(id=request.data['id'])
-		for k, v in request.data.items():
-			match k:
-				case 'id':
-					pass
-				case 'date':
-					date = datetime.fromisoformat(request.data['date'])
-					setattr(receipt, 'date', date)
-					iso = (date + timedelta(days=offset)).isocalendar()
-					if receipt.week != iso[1]:
-						setattr(receipt, 'year', iso[0])
-						setattr(receipt, 'week', iso[1])
-				case 'items':
-					ids = [item.id for item in v]
-					curr_items = [item for item in ReceiptItem.objects.filter(receipt=receipt)]
-					for item in curr_items:
-						if item.pk not in ids:
-							ReceiptItem.objects.get(id=item.pk).delete()
-					for item in v:
-						db_item = ReceiptItem.objects.get(id=item.pk)
-						db_item.amount = item.amount
-						db_item.tags.clear()
-						db_item.tags.set(item.tags)
-				case 'tags':
-					tags = [Tag.objects.get_or_create(name=tag['value'])[0] for tag in json.loads(v)]
-					receipt.tags.clear()
-					for tag in tags:
-						receipt.tags.add(tag)
-				case 'category':
-					new_category = Category.objects.get(name=v)
-					setattr(receipt, 'category', new_category)
-				case _:
-					setattr(receipt, k, v)
-		receipt.save()
+
+		validated_payload = ReceiptRequestSerializer(data=request.data, partial=True)
+		validated_payload.is_valid(raise_exception=True)
+
+		with transaction.atomic():
+			for k, v in validated_payload.validated_data.items():
+				match k:
+					case 'date':
+						date = datetime.fromisoformat(request.data['date'])
+						setattr(receipt, 'date', date)
+						iso = (date + timedelta(days=offset)).isocalendar()
+						if receipt.week != iso[1]:
+							setattr(receipt, 'year', iso[0])
+							setattr(receipt, 'week', iso[1])
+					case 'items':
+						sent_ids = [item['id'] for item in v if 'id' in item]
+						receipt.items.exclude(id__in=sent_ids).delete()
+						for item in v:
+							if 'id' in item:
+								db_item = receipt.items.get(id=item['id'])
+								db_item.amount = item['amount']
+								db_item.save()
+							else:
+								db_item = ReceiptItem.objects.create(receipt=receipt, amount=item['amount'])
+							db_item.tags.set(get_tags(item.get('tags', [])))
+					case 'tags':
+						receipt.tags.set(get_tags(v))
+					case 'category':
+						new_category = Category.objects.get(name=v)
+						setattr(receipt, 'category', new_category)
+					case _:
+						setattr(receipt, k, v)
+			receipt.save()
 		serializer = ReceiptSerializer(receipt)
 		return Response(serializer.data, status=200)
 	elif request.method == 'DELETE':
@@ -241,10 +236,7 @@ def balance(request):
 def query(request):
 	date_from = date.fromisoformat(request.data.get('from'))
 	date_to = date.fromisoformat(request.data.get('to'))
-	try:
-		tags = [tag['value'] for tag in json.loads(request.data.get('tags'))]
-	except TypeError:
-		tags = []
+	tags = request.data.get('tags') or []
 	receipts = Receipt.objects.query_receipts(date_from, date_to, tags)
 	return Response(receipts)
 

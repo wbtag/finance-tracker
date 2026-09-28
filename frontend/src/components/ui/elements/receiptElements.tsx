@@ -1,31 +1,39 @@
-import { Input, Select, Label } from "./formElements";
+import { Input, Select, Label, FieldError } from "./formElements";
 import Tagify from "@yaireo/tagify";
 import { useRef, useEffect } from "react";
 import type { StateHandler } from "../../lib/useStateHandler";
+import type { ReceiptErrors } from "../../lib/receiptValidation";
 
 interface ReceiptParamsProps {
     handler: StateHandler<any>;
     categories: string[];
     tags: string[];
     type?: string;
+    validationErrors?: ReceiptErrors
 }
 
-export function ReceiptParams({ handler, categories, tags, type }: ReceiptParamsProps) {
+export function ReceiptParams({ handler, categories, tags, validationErrors }: ReceiptParamsProps) {
 
     const { formData } = handler;
 
     return (
         <>
-            <Input label="Datum" type="date" name="date" value={formData.date} handler={handler} />
-            {type != "mandatory" ?
-                <div>
-                    <Select label="Kategorie" name="category" blankOption={true} options={categories} value={formData.category} handler={handler} />
-                </div> :
-                <div />
-            }
-            <Input label="Popis" name="description" value={formData.description} handler={handler} />
-            <Input label="Částka" name="amount" value={formData.amount} handler={handler} />
-            <TagInput handler={handler} tags={tags} />
+            <div>
+                <Input label="Datum" type="date" name="date" value={formData.date} handler={handler} />
+                <FieldError show={validationErrors?.date}>Datum není v platném formátu</FieldError>
+            </div>
+            <Select label="Kategorie" name="category" options={categories} value={formData.category} handler={handler} />
+            <div>
+                <Input label="Popis" name="description" value={formData.description} handler={handler} />
+                <FieldError show={validationErrors?.description}>Popis chybí</FieldError>
+            </div>
+            <div>
+                <Input label="Částka" name="amount" value={formData.amount} handler={handler} />
+                <FieldError show={validationErrors?.amount}>Neplatná částka</FieldError>
+            </div>
+            <div>
+                <TagInput handler={handler} tags={tags} />
+            </div>
         </>
     )
 }
@@ -33,9 +41,10 @@ export function ReceiptParams({ handler, categories, tags, type }: ReceiptParams
 interface ReceiptItemsProps {
     handler: StateHandler<any>;
     tags: string[];
+    validationErrors?: ReceiptErrors;
 }
 
-export function ReceiptItems({ handler, tags }: ReceiptItemsProps) {
+export function ReceiptItems({ handler, tags, validationErrors }: ReceiptItemsProps) {
 
     const { formData, changeArrayItem, addArrayItem, removeArrayItem } = handler;
 
@@ -77,6 +86,10 @@ export function ReceiptItems({ handler, tags }: ReceiptItemsProps) {
                         }
                     </div>
                 ))}
+                <div className="py-2">
+                    <FieldError show={validationErrors?.itemsAmount}>Hodnota každé položky musí být kladné číslo a součet hodnot položek musí být roven celkové hodnotě účtenky.</FieldError>
+                    <FieldError show={validationErrors?.itemsTags}>Každá položka musí mít alespoň jednu značku.</FieldError>
+                </div>
                 <p>Zbývá do celkové částky: {formData.amount - formData.items.reduce((acc: number, curr: { amount: number | string }) => acc + Number(curr.amount), 0)}</p>
             </div>
         </>
@@ -105,6 +118,8 @@ export function TagInput({ handler, tags, index, name }: TagInputProps) {
 
     const inputName = name || (idx ? `tags-${idx}` : "tags");
 
+    const value = idx ? formData.items[idx].tags : formData[inputName];
+
     useEffect(() => {
         tagify.current = new Tagify(inputRef.current!, {
             whitelist: tags,
@@ -129,6 +144,13 @@ export function TagInput({ handler, tags, index, name }: TagInputProps) {
         }
     }, [tags]);
 
+    useEffect(() => {
+        const isEmpty = !value || (Array.isArray(value) && value.every(tag => !tag));
+        if (tagify.current && isEmpty) {
+            tagify.current.removeAllTags({ withoutChangeEvent: true });
+        }
+    }, [value]);
+
     return (
         <>
             <div className="flex flex-col">
@@ -137,7 +159,7 @@ export function TagInput({ handler, tags, index, name }: TagInputProps) {
                     ref={inputRef}
                     className="input px-[10px] py-[11px] border-1 rounded-[5px] md:w-[210px] w-[180px] focus:outline-none placeholder:text-black/25"
                     name={inputName}
-                    value={idx ? formData.items[idx].tags : formData[inputName]}
+                    value={value}
                     onChange={idx ? (e) => changeArrayItem(e, index!) : handleInput}>
                 </input>
             </div>

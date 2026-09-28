@@ -17,11 +17,13 @@ export interface Receipt {
 }
 
 export interface RawReceiptItem {
+    id?: number;
     amount: number | string;
     tags: string | string[];
 }
 
 export interface ReceiptItem {
+    id: number;
     amount: number;
     tags: string[];
 }

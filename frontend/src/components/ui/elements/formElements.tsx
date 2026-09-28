@@ -1,4 +1,4 @@
-import type { ChangeEventHandler } from "react";
+import type { ChangeEventHandler, ReactNode } from "react";
 import type { StateHandler } from "../../lib/useStateHandler";
 
 interface InputProps {
@@ -82,6 +82,11 @@ export function Select({ label, handler, name, options, blankOption, changeHandl
             </div>
         </>
     )
+}
+
+export function FieldError({ show, children }: { show?: boolean; children: ReactNode }) {
+    if (!show) return null;
+    return <p className="text-sm text-red-600 dark:text-red-400">{children}</p>;
 }
 
 export function Label({ label }: { label: string }) {

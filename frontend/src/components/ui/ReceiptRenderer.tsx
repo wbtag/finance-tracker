@@ -1,6 +1,9 @@
 import { useState, type MouseEvent } from "react";
 import { ReceiptParams, ReceiptItems } from "./elements/receiptElements";
 import { useStateHandler } from "../lib/useStateHandler";
+import { useValidation } from "../lib/useValidation";
+import { receiptRules } from "../lib/receiptValidation";
+import { normalizeItems, normalizeTags } from "../lib/tags";
 import { useEffect } from "react";
 import { request } from "@/components/lib/request";
 import { Receipt, RawReceiptItem } from "@/app/types/receipt";
@@ -168,32 +171,6 @@ function toDateInputValue(date: number | string) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function normalizeTags(tags: RawTags | undefined): string[] {
-    if (!tags) return [];
-    if (typeof tags === 'string') {
-        const trimmed = tags.trim();
-        if (!trimmed) return [];
-        try {
-            const parsed = JSON.parse(trimmed);
-            if (Array.isArray(parsed)) return normalizeTags(parsed);
-        } catch {
-            return trimmed.split(',').map(t => t.trim()).filter(Boolean);
-        }
-        return [trimmed];
-    }
-    return tags
-        .map(t => (typeof t === 'string' ? t : t.value))
-        .map(t => t.trim())
-        .filter(Boolean);
-}
-
-function normalizeItems(items: RawReceiptItem[] | undefined) {
-    return (items ?? []).map(item => ({
-        amount: Number(item.amount),
-        tags: normalizeTags(item.tags),
-    }));
-}
-
 interface ReceiptEditFormProps {
     receipt: Receipt;
     tags: string[];
@@ -215,10 +192,12 @@ function ReceiptEditForm({ receipt, tags, categories, onCancel, onSaved }: Recei
     const { formData } = stateHandler;
 
     const [saving, setSaving] = useState(false);
+    const { errors, validate } = useValidation(receiptRules(receipt.type));
 
     const handleSave = async (e: MouseEvent<HTMLButtonElement>) => {
 
         e.stopPropagation();
+        if (!validate(formData)) return;
         setSaving(true);
 
         try {
@@ -278,10 +257,10 @@ function ReceiptEditForm({ receipt, tags, categories, onCancel, onSaved }: Recei
             className="py-3 flex flex-col gap-3"
             onClick={(e) => e.stopPropagation()}
         >
-            <ReceiptParams handler={stateHandler} categories={categories} tags={tags} />
+            <ReceiptParams handler={stateHandler} categories={categories} tags={tags} validationErrors={errors} />
 
             {receipt.type === 'extended' && (
-                <ReceiptItems handler={stateHandler} tags={tags} />
+                <ReceiptItems handler={stateHandler} tags={tags} validationErrors={errors} />
             )}
 
             <div className="flex gap-2 justify-end pt-2">
