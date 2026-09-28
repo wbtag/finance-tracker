@@ -12,7 +12,7 @@ export default function LoginPage() {
         password: '',
     });
 
-    const { formData } = stateHandler;
+    const { formData, handleInput } = stateHandler;
     const router = useRouter();
     const [error, setError] = useState('');
     const [checking, setChecking] = useState(true);
@@ -54,20 +54,8 @@ export default function LoginPage() {
             <div className="w-full max-w-sm p-6 rounded bg-transparent">
                 <h1 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Přihlášení</h1>
                 <form onSubmit={handleLogin} className="flex flex-col gap-3">
-                    <Input
-                        label="Uživatelské jméno"
-                        type="text"
-                        name="username"
-                        value={formData.username}
-                        handler={stateHandler}
-                    />
-                    <Input
-                        label="Heslo"
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        handler={stateHandler}
-                    />
+                    <input className="border px-3 py-2 rounded bg-white dark:bg-gray-800 dark:text-gray-100" name="username" placeholder="Uživatelské jméno" value={formData.username} onChange={handleInput} />
+                    <input className="border px-3 py-2 rounded bg-white dark:bg-gray-800 dark:text-gray-100" name="password" type="password" placeholder="Heslo" value={formData.password} onChange={handleInput} />
                     {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
                     <button className="button" type="submit">Přihlásit se</button>
                 </form>
