@@ -88,7 +88,11 @@ def overview(request):
 	month_category_spend = Category.objects.get_monthly_category_spend(month_cutoff)
 
 	balance_data = Balance.objects.get_current_balance()
-	balance = balance_data[0][0]
+
+	try:
+		balance = balance_data[0][0]
+	except IndexError:
+		balance = 0
 
 	data = {
 		"weekly_spend": week_spend["amount__sum"] if week_spend["amount__sum"] else 0,
@@ -192,7 +196,7 @@ def receipt(request):
 
 @api_view(['GET'])
 def categories(request):
-	categories = Category.objects.values_list('name', flat=True).distinct().order_by('-week_limit')
+	categories = Category.objects.values_list('name', flat=True).distinct().order_by('-week_limit', 'name')
 	return Response(categories)
 
 @api_view(['GET'])

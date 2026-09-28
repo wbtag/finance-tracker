@@ -108,7 +108,7 @@ class CategoryManager(models.Manager):
 				FROM main_receipt r
 				RIGHT JOIN main_category c ON r.category_id = c.id AND r.date >= %s
 				GROUP BY c.name, c.id, c.week_limit
-				ORDER BY c.week_limit DESC
+				ORDER BY c.week_limit DESC, c.name ASC
 				""", [cutoff])
 			output = [dict(row) for row in cursor.fetchall()]
 			return {row['name']: {
@@ -126,7 +126,7 @@ class CategoryManager(models.Manager):
 					FROM main_receipt r
 					RIGHT JOIN main_category c ON r.category_id = c.id AND r.date >= %s
 					GROUP BY c.name, c.id, c.month_limit
-					ORDER BY c.month_limit DESC
+					ORDER BY c.month_limit DESC, c.name ASC
 				""", [cutoff])
 			output = [dict(row) for row in cursor.fetchall()]
 			return {row['name']: {
