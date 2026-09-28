@@ -1,12 +1,11 @@
 'use client'
 
-// TODO: Selected categories should persist with re-fetch
 // TODO: Visibly show data reload on re-fetch
 
 import { RawTags } from "@/app/types/tags";
 import { Receipt } from "@/app/types/receipt";
 
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { useStateHandler } from "../lib/useStateHandler";
 import { Select, Input } from "../ui/elements/formElements";
 import { TagInput } from "../ui/elements/receiptElements";
@@ -74,6 +73,8 @@ export default function Query({ period, fiscalMonthStart }: { period?: string; f
                 case "monthToDate":
                     fromDate.setMonth(date.getMonth() - 1);
                     break;
+                case "allTime":
+                    fromDate.setFullYear(2000,0,1)
             };
 
             from = fromDate.toISOString().split('T')[0];
@@ -93,7 +94,6 @@ export default function Query({ period, fiscalMonthStart }: { period?: string; f
     };
 
     const [receipts, setReceipts] = useState<Receipt[]>([]);
-    const [filteredReceipts, setFilteredReceipts] = useState<Receipt[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [activeCategories, setActiveCategories] = useState<string[]>([]);
     const [tags, setTags] = useState<string[]>([]);
@@ -108,7 +108,7 @@ export default function Query({ period, fiscalMonthStart }: { period?: string; f
         setCategories(response);
         changeFormData((prevState) => ({
             ...prevState,
-            categories
+            categories: response
         }));
     }
 
@@ -118,9 +118,11 @@ export default function Query({ period, fiscalMonthStart }: { period?: string; f
         query();
     }, []);
 
-    useEffect(() => {
-        filterReceipts(receipts, activeCategories);
-    }, [activeCategories]);
+    const filteredReceipts = useMemo(() =>
+        activeCategories.length === 0
+            ? receipts
+            : receipts.filter((receipt) => activeCategories.includes(receipt.category)),
+        [receipts, activeCategories]);
 
     const query = async (input?: FormEvent<HTMLFormElement> | { from: string; to: string }) => {
 
@@ -145,12 +147,6 @@ export default function Query({ period, fiscalMonthStart }: { period?: string; f
             })
         })
         setReceipts(receipts);
-        setFilteredReceipts(receipts);
-    };
-
-    const filterReceipts = (receipts: Receipt[], categories: string[]) => {
-        const receiptsToShow = receipts.filter((receipt) => categories.includes(receipt.category));
-        setFilteredReceipts(receiptsToShow);
     };
 
     const timeframeOptions = [
@@ -159,6 +155,7 @@ export default function Query({ period, fiscalMonthStart }: { period?: string; f
         { name: "Tento měsíc", value: "month" },
         { name: "Fiskální měsíc", value: "fiscalMonth" },
         { name: "Posledních 30 dní", value: "monthToDate" },
+        { name: "Od počátku věků", value: "allTime" },
         { name: "Vlastní", value: "custom" },
     ];
 

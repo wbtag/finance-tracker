@@ -30,6 +30,7 @@ export default function CategoryPicker({ categories, activeCategories, setActive
                             type="button"
                             key={category}
                             onClick={() => handleCategoryInput(category)}
+                            onDoubleClick={handleSelectAllCategories}
                             className={`button ${activeCategories.includes(category) ?
                                 "button--active" : ""}`}
                         >{category}</button>
