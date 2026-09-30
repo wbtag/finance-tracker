@@ -10,9 +10,12 @@ RUN pip install --upgrade pip
 COPY requirements.txt  /api/
 
 RUN pip install --no-cache-dir -r requirements.txt
+RUN groupadd --system --gid 10001 finance-tracker \
+    && useradd --system --uid 10001 --gid finance-tracker --no-create-home api
 
 COPY . /api/
 WORKDIR /api/finance
+USER 10001:10001
 EXPOSE 8000
 
 ENTRYPOINT ["/api/entrypoint.sh"]

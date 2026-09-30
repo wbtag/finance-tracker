@@ -1,3 +1,4 @@
+# TODO: show off by allowing scale out across multiple hosts (Docker Swarm/Kubernetes).
 services:
   frontend:
     container_name: "finance-tracker-frontend"
@@ -6,7 +7,7 @@ services:
       args:
         API_URL: "http://api:8000"
     ports:
-      - "3000:3000"
+      - "${FRONTEND_BIND_ADDRESS:-127.0.0.1}:3000:3000"
     environment:
       NODE_ENV: production
       API_URL: http://api:8000
@@ -54,7 +55,7 @@ services:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${DATABASE_BIND_ADDRESS:-127.0.0.1}:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

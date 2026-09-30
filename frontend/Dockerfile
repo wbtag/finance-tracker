@@ -18,13 +18,13 @@ RUN pnpm build
 FROM base AS runner
 WORKDIR /frontend
 ENV NODE_ENV=production
-RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
+RUN addgroup -S -g 10002 finance-tracker && adduser -S -u 10002 -G finance-tracker frontend
 
 COPY --from=builder /frontend/public ./public
-COPY --from=builder /frontend/.next ./.next
+COPY --from=builder --chown=10002:10002 /frontend/.next ./.next
 COPY --from=builder /frontend/node_modules ./node_modules
 COPY --from=builder /frontend/package.json ./package.json
 
-USER nextjs
+USER 10002:10002
 EXPOSE 3000
 CMD ["node_modules/.bin/next", "start"]
