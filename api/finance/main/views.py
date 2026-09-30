@@ -69,14 +69,13 @@ def verify_view(request):
 
 @api_view(['GET'])
 def overview(request):
-	now = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-	cutoff = now
-	if now.weekday() != 6:
-		cutoff = now - timedelta(days=now.weekday()+1)
+	now = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+	# Days since week start: weekday() is 0 on Monday, offset moves the start back to Sunday.
+	cutoff = now - timedelta(days=(now.weekday() + offset) % 7)
 
 	week_spend = Receipt.objects.filter(date__gte=cutoff).aggregate(Sum("amount"))
-	month_cutoff = cutoff.replace(day=fiscal_month_start)
-	if cutoff.day < fiscal_month_start:
+	month_cutoff = now.replace(day=fiscal_month_start)
+	if now.day < fiscal_month_start:
 		# Fiscal month has not begun yet this calendar month; step back one.
 		if month_cutoff.month == 1:
 			month_cutoff = month_cutoff.replace(year=month_cutoff.year - 1, month=12)
@@ -124,7 +123,7 @@ def receipt(request):
 
 		iso = (d+ timedelta(days=offset)).isocalendar()
 
-		receipt_date = timezone.now().isoformat() if d.date() == timezone.now().date() else d.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+		receipt_date = timezone.now().isoformat() if d.date() == timezone.localdate() else d.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
 
 		receipt_type = payload.get('type')
 		category = Category.objects.get(name=payload['category'])

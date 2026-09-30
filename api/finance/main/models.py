@@ -1,4 +1,7 @@
+from datetime import datetime, time, timedelta
+
 from django.db import models, connection
+from django.utils import timezone
 from psycopg2.extras import RealDictCursor
 
 class BalanceManager(models.Manager):
@@ -59,6 +62,8 @@ class ReceiptManager(models.Manager):
 
 	def query_receipts(self, date_from, date_to, tags, ascending=False):
 		order = 'ASC' if ascending else 'DESC'
+		start = timezone.make_aware(datetime.combine(date_from, time.min))
+		end = timezone.make_aware(datetime.combine(date_to + timedelta(days=1), time.min))
 		with connection.cursor() as cursor:
 			cursor = connection.connection.cursor(cursor_factory=RealDictCursor)
 			cursor.execute(f"""
@@ -90,13 +95,13 @@ class ReceiptManager(models.Manager):
 				FROM receipts r
 				LEFT JOIN receipt_items ri ON r.id = ri.receipt_id
 				WHERE
-					r.date >= %(from)s AND r.date < %(to)s + INTERVAL '1 day' AND
+					r.date >= %(from)s AND r.date < %(to)s AND
 					CASE
 						WHEN r.has_query_tags = 1 THEN TRUE
 						ELSE ri.has_query_tags = 1 END
 				GROUP BY r.id, r.type, r.amount, r.date, r.name, r.description, r.tags
 				ORDER BY r.date {order}
-			""", {'tags': tags, 'from': date_from, 'to': date_to })
+			""", {'tags': tags, 'from': start, 'to': end })
 			return [dict(row) for row in cursor.fetchall()]
 
 class CategoryManager(models.Manager):

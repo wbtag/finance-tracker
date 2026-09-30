@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, type MouseEvent } from "react";
-import { getWeek } from "date-fns";
+import { addDays, getISOWeek, getISOWeekYear } from "date-fns";
 import AnimateValue from "../ui/AnimateValue";
 import SpendTable from "../ui/SpendTable";
 import Switcher from "../ui/Switcher";
@@ -13,7 +13,9 @@ export interface CategorySpend {
     limit: number;
 }
 
-export default function Spend() {
+export default function Spend({ sundayWeekStart }: { sundayWeekStart: boolean }) {
+
+    const weekDate = addDays(new Date(), sundayWeekStart ? 1 : 0);
 
     const [weeklySpend, setWeeklySpend] = useState(0);
     const [weeklyOtherSpend, setWeeklyOtherSpend] = useState(0);
@@ -55,7 +57,7 @@ export default function Spend() {
                 <div className="flex flex-wrap md:my-4 justify-center">
                     <div className="my-2 w-80 text-center">
                         <Link href={
-                            `/weekly-summary/${new Date().getFullYear()}/${getWeek(new Date(), { weekStartsOn: 0 })}`
+                            `/weekly-summary/${getISOWeekYear(weekDate)}/${getISOWeek(weekDate)}`
                         }>
                             <p className="text-3xl">{animatedWeeklySpend.toFixed()} Kč</p>
                             <p>Útrata tento týden</p>

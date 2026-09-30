@@ -1,5 +1,6 @@
 'use client'
 import React, {useEffect, useState, type MouseEvent } from "react";
+import { format } from "date-fns";
 import { useStateHandler } from "../lib/useStateHandler";
 import { ReceiptType, RawReceiptItem } from "@/app/types/receipt";
 import { RawTags } from "@/app/types/tags";
@@ -40,7 +41,7 @@ export default function NewReceipt( { categories }: { categories: string[] } ) {
     };
 
     const initialState: NewReceiptFormState = {
-        date: new Date().toISOString().split('T')[0],
+        date: format(new Date(), 'yyyy-MM-dd'),
         amount: '',
         description: '',
         category: categories[0] ?? '',

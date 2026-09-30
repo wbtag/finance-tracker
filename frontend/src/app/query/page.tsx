@@ -8,7 +8,7 @@ export default async function ReceiptPage({ searchParams }: { searchParams: Prom
     return (
         <>
             <div>
-                <Query period={params.period} fiscalMonthStart={getConfig().fiscalMonthStart} />
+                <Query period={params.period} fiscalMonthStart={getConfig().fiscalMonthStart} sundayWeekStart={getConfig().sundayWeekStart} />
             </div>
         </>
     )

@@ -6,6 +6,7 @@ import { RawTags } from "@/app/types/tags";
 import { Receipt } from "@/app/types/receipt";
 
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { format } from "date-fns";
 import { useStateHandler } from "../lib/useStateHandler";
 import { Select, Input } from "../ui/elements/formElements";
 import { TagInput } from "../ui/elements/receiptElements";
@@ -23,22 +24,22 @@ interface QueryFormState {
 }
 
 // Start of the fiscal month containing `date`. A month of -1 rolls back a year
-// on its own. The +1 matches the previous behaviour.
+// on its own.
 function fiscalMonthStartDate(date: Date, fiscalMonthStart: number): Date {
     return new Date(
         date.getFullYear(),
         date.getDate() >= fiscalMonthStart ?
             date.getMonth() : date.getMonth() - 1,
-        fiscalMonthStart + 1
+        fiscalMonthStart
     );
 }
 
-export default function Query({ period, fiscalMonthStart }: { period?: string; fiscalMonthStart: number }) {
+export default function Query({ period, fiscalMonthStart, sundayWeekStart }: { period?: string; fiscalMonthStart: number; sundayWeekStart: boolean }) {
 
     const initialState: QueryFormState = {
         timeframe: 'fiscalMonth',
-        from: fiscalMonthStartDate(new Date(), fiscalMonthStart).toISOString().split('T')[0],
-        to: new Date().toISOString().split('T')[0],
+        from: format(fiscalMonthStartDate(new Date(), fiscalMonthStart), 'yyyy-MM-dd'),
+        to: format(new Date(), 'yyyy-MM-dd'),
         queryTags: [],
         categories: []
     };
@@ -59,7 +60,7 @@ export default function Query({ period, fiscalMonthStart }: { period?: string; f
 
             switch (timeframe) {
                 case "week":
-                    fromDate.setDate(date.getDate() - date.getDay());
+                    fromDate.setDate(date.getDate() - (date.getDay() + (sundayWeekStart ? 0 : 6)) % 7);
                     break;
                 case "weekToDate":
                     fromDate.setDate(date.getDate() - 6);
@@ -77,8 +78,8 @@ export default function Query({ period, fiscalMonthStart }: { period?: string; f
                     fromDate.setFullYear(2000,0,1)
             };
 
-            from = fromDate.toISOString().split('T')[0];
-            to = date.toISOString().split('T')[0];
+            from = format(fromDate, 'yyyy-MM-dd');
+            to = format(date, 'yyyy-MM-dd');
         } else {
             from = formData.from;
             to = formData.to;

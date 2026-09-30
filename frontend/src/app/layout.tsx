@@ -16,7 +16,7 @@ export function generateMetadata() {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="cs">
       <head>
         <meta name="viewport" content="width=1024" />
       </head>
