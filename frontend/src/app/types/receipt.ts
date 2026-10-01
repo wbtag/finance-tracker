@@ -12,6 +12,7 @@ export interface Receipt {
     year: number;
     tags: string[];
     amount: number;
+    filtered_amount?: number;
     description: string;
     items?: ReceiptItem[];
 }

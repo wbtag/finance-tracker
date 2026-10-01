@@ -34,7 +34,7 @@ function fiscalMonthStartDate(date: Date, fiscalMonthStart: number): Date {
     );
 }
 
-export default function Query({ period, fiscalMonthStart, sundayWeekStart }: { period?: string; fiscalMonthStart: number; sundayWeekStart: boolean }) {
+export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMonthStart: number; sundayWeekStart: boolean }) {
 
     const initialState: QueryFormState = {
         timeframe: 'fiscalMonth',
@@ -76,14 +76,14 @@ export default function Query({ period, fiscalMonthStart, sundayWeekStart }: { p
                     break;
                 case "allTime":
                     fromDate.setFullYear(2000,0,1)
-            };
+            }
 
             from = format(fromDate, 'yyyy-MM-dd');
             to = format(date, 'yyyy-MM-dd');
         } else {
             from = formData.from;
             to = formData.to;
-        };
+        }
 
         changeFormData({
             from,
@@ -135,7 +135,7 @@ export default function Query({ period, fiscalMonthStart, sundayWeekStart }: { p
         } else if (input && input.from && input.to) {
             from = input.from;
             to = input.to;
-        };
+        }
 
         const receipts = await request('query/', {
             method: 'POST',
@@ -155,7 +155,7 @@ export default function Query({ period, fiscalMonthStart, sundayWeekStart }: { p
         { name: "Posledních 7 dní", value: "weekToDate" },
         { name: "Tento měsíc", value: "month" },
         { name: "Fiskální měsíc", value: "fiscalMonth" },
-        { name: "Posledních 30 dní", value: "monthToDate" },
+        { name: "Kalendářní měsíc", value: "monthToDate" },
         { name: "Od počátku věků", value: "allTime" },
         { name: "Vlastní", value: "custom" },
     ];
@@ -206,7 +206,7 @@ export default function Query({ period, fiscalMonthStart, sundayWeekStart }: { p
                 activeCategories={activeCategories}
                 setActiveCategories={setActiveCategories}
             />
-            <p className="mt-4 text-lg text-center">Celková útrata: {filteredReceipts.reduce((a, c) => a + c.amount, 0)} Kč</p>
+            <p className="mt-4 text-lg text-center">Celková útrata: {filteredReceipts.reduce((a, c) => a + (c.filtered_amount ?? c.amount), 0)} Kč</p>
             {filteredReceipts.length > 0 ?
                 <div>
                     <div className="w-full max-w-2xl mx-auto px-4 sm:px-0 py-2">

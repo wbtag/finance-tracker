@@ -88,7 +88,7 @@ function ReceiptRow({ receipt, categories, tags }: ReceiptRowProps) {
                 </div>
 
                 <span className="text-white/85 text-sm sm:text-base tabular-nums whitespace-nowrap">
-                    {Number(receipt.amount).toLocaleString("cs-CZ")} Kč
+                    {Number(receipt.filtered_amount ?? receipt.amount).toLocaleString("cs-CZ")} Kč
                 </span>
 
                 <div
@@ -129,6 +129,18 @@ function ReceiptRow({ receipt, categories, tags }: ReceiptRowProps) {
                                         {receipt.tags.join(", ")}
                                     </p>
                                 </div>
+
+
+                                { receipt.filtered_amount && receipt.filtered_amount != receipt.amount ?
+                                    <div className="flex flex-row">
+                                        <p className="text-white/90 min-w-20 text-sm sm:text-base truncate tracking-wide">
+                                            Celkem:
+                                        </p>
+                                        <p className="text-white/90 text-sm sm:text-base truncate tracking-wide">
+                                            {receipt.amount} Kč
+                                        </p>
+                                    </div> : null
+                                }
                             </div>
                             {hasItems && (
                                 <div>

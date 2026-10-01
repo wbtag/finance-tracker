@@ -53,7 +53,7 @@ export function ReceiptItems({ handler, tags, validationErrors }: ReceiptItemsPr
             <div>
                 <h2 className="mt-3 text-xl">Položky</h2>
                 <div>
-                    {formData.items.length <= 10 ?
+                    {formData.items.length < 10 ?
                         <div>
                             <button className="button button--active mt-2" name="items" onClick={(e) => addArrayItem(e)}>Přidat další položku</button>
                         </div> :

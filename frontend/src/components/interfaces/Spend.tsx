@@ -40,7 +40,6 @@ export default function Spend({ sundayWeekStart }: { sundayWeekStart: boolean })
         setWeeklySpendByCategory(data.weekly_spend_categories)
         setMonthlySpend(data.monthly_spend)
         setMonthlySpendByCategory(data.monthly_spend_categories)
-        setWeeklySpend(data.weekly_spend)
         setWeeklyOtherSpend(data.other.week)
         setMonthlyOtherSpend(data.other.month)
     }
