@@ -1,4 +1,5 @@
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .serializers import BalanceSerializer, ReceiptSerializer, ReceiptRequestSerializer
@@ -18,6 +19,13 @@ offset = 1 if settings.SUNDAY_WEEK_START else 0
 
 def get_tags(names):
 	return [Tag.objects.get_or_create(name=name)[0] for name in names]
+
+def validate_items_sum(receipt):
+	if receipt.type != 'extended':
+		return
+	items_sum = receipt.items.aggregate(total=Sum('amount'))['total'] or 0
+	if items_sum != receipt.amount:
+		raise ValidationError({ 'items': f'Items sum ({items_sum}) does not match receipt amount ({receipt.amount})' })
 
 @api_view(['GET'])
 def config(request):
@@ -128,25 +136,28 @@ def receipt(request):
 		receipt_type = payload.get('type')
 		category = Category.objects.get(name=payload['category'])
 
-		new_receipt = Receipt.objects.create(
-			date=receipt_date,
-			category=category,
-			type=receipt_type,
-			description=payload['description'],
-			amount=payload['amount'],
-			week=iso[1],
-			year=iso[0],
-		)
+		with transaction.atomic():
+			new_receipt = Receipt.objects.create(
+				date=receipt_date,
+				category=category,
+				type=receipt_type,
+				description=payload['description'],
+				amount=payload['amount'],
+				week=iso[1],
+				year=iso[0],
+			)
 
-		new_receipt.tags.set(get_tags(payload['tags']))
+			new_receipt.tags.set(get_tags(payload['tags']))
 
-		if receipt_type == 'extended':
-			for item in payload.get('items', []):
-				receipt_item = ReceiptItem.objects.create(
-					receipt=new_receipt,
-					amount=item['amount']
-				)
-				receipt_item.tags.set(get_tags(item['tags']))
+			if receipt_type == 'extended':
+				for item in payload.get('items', []):
+					receipt_item = ReceiptItem.objects.create(
+						receipt=new_receipt,
+						amount=item['amount']
+					)
+					receipt_item.tags.set(get_tags(item['tags']))
+
+			validate_items_sum(new_receipt)
 
 		return Response(new_receipt.id, status=201)
 	elif request.method == 'PUT':
@@ -184,6 +195,7 @@ def receipt(request):
 					case _:
 						setattr(receipt, k, v)
 			receipt.save()
+			validate_items_sum(receipt)
 		serializer = ReceiptSerializer(receipt)
 		return Response(serializer.data, status=200)
 	elif request.method == 'DELETE':

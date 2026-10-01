@@ -1,6 +1,6 @@
 import { RawTags } from "./tags";
 
-export type ReceiptType = 'simple' | 'extended' | 'mandatory';
+export type ReceiptType = 'simple' | 'extended';
 
 export interface Receipt {
     id: number;

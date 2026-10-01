@@ -153,7 +153,6 @@ class Receipt(models.Model):
 	types = [
 		('simple', 'Simple'),
 		('extended', 'Extended'),
-		('mandatory', 'Mandatorní'),
 	]
 
 	date = models.DateTimeField()
@@ -169,10 +168,20 @@ class Receipt(models.Model):
 
 	objects = ReceiptManager()
 
+	class Meta:
+		constraints = [
+			models.CheckConstraint(condition=models.Q(amount__gt=0), name='receipt_amount_positive'),
+		]
+
 class ReceiptItem(models.Model):
 	receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE, related_name='items')
 	tags = models.ManyToManyField(Tag, related_name='receiptItems', blank=True)
 	amount = models.IntegerField()
+
+	class Meta:
+		constraints = [
+			models.CheckConstraint(condition=models.Q(amount__gt=0), name='receiptitem_amount_positive'),
+		]
 
 class Balance(models.Model):
 	balance = models.IntegerField()

@@ -3,14 +3,14 @@ from .models import Receipt
 
 class ReceiptRequestItemsSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
-    amount = serializers.IntegerField()
+    amount = serializers.IntegerField(min_value=1)
     tags = serializers.ListField(child=serializers.CharField(), required=False, default=list)
 
 class ReceiptRequestSerializer(serializers.Serializer):
     date = serializers.CharField()
     category = serializers.CharField()
-    amount = serializers.IntegerField()
-    type = serializers.CharField()
+    amount = serializers.IntegerField(min_value=1)
+    type = serializers.ChoiceField(choices=['simple', 'extended'])
     description = serializers.CharField()
     tags = serializers.ListField(child=serializers.CharField(), required=False, default=list)
     items = ReceiptRequestItemsSerializer(many=True, required=False)
