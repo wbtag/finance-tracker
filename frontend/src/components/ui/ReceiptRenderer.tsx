@@ -259,6 +259,10 @@ function ReceiptEditForm({ receipt, tags, categories, onCancel, onSaved }: Recei
             } else {
                 onCancel();
             }
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                window.alert('Chyba: ' + e.message)
+            }
         } finally {
             setSaving(false);
         }

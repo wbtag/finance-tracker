@@ -37,11 +37,6 @@ class BalanceManager(models.Manager):
 			return cursor.fetchall()
 
 class ReceiptManager(models.Manager):
-	def get_weekly_spend(self, datetime):
-		with connection.cursor() as cursor:
-			cursor.execute('SELECT SUM(r.amount) FROM main_receipt r WHERE r.date >= %(date)s', { 'date': datetime })
-			return cursor.fetchall()
-
 	def get_spend_by_week(self, year):
 		with connection.cursor() as cursor:
 			cursor.execute("""
@@ -138,10 +133,10 @@ class CategoryManager(models.Manager):
 			} for row in output}
 
 class Tag(models.Model):
-	name = models.CharField(max_length=50)
+	name = models.CharField(max_length=50, unique=True)
 
 class Category(models.Model):
-	name = models.CharField(max_length=255)
+	name = models.CharField(max_length=255, unique=True)
 	exclude_from_overview = models.BooleanField(default=False)
 	is_misc = models.BooleanField(default=False)
 	week_limit = models.IntegerField()

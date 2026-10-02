@@ -66,26 +66,18 @@ export default function NewReceipt( { categories }: { categories: string[] } ) {
             };
 
             try {
-                const response = await request('receipt/', {
+                await request('receipt/', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
                     body: JSON.stringify(receiptBody),
                 });
 
-                if (response.error) {
-                    window.alert(`Chyba: ${response.error}`);
-                } else {
-                    window.alert('Účtenka úspěšně zaevidována');
-                    stateHandler.clearForm();
-                }
-
+                window.alert('Účtenka úspěšně zaevidována');
+                stateHandler.clearForm();
             } catch (e) {
-                window.alert(e instanceof Error ? e.message : String(e));
+                window.alert('Chyba: ' + (e instanceof Error ? e.message : String(e)));
+            } finally {
+                setSaving(false);
             }
-
-            setSaving(false);
         }
     };
 

@@ -17,9 +17,6 @@ export function generateMetadata() {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="cs">
-      <head>
-        <meta name="viewport" content="width=1024" />
-      </head>
       <body style={{backgroundColor: '#09002f'}}>
         <Navigation appName={getConfig().appName} />
         {children}

@@ -92,40 +92,46 @@ export default function Balance() {
 
         setSaving(true);
 
-        if (formId === 'balance') {
-            const newBalanceData = await request('balance/', {
-                method: 'POST',
-                body: JSON.stringify({
-                    type: 'balance',
-                    balance: balanceStateHandler.formData.balance,
+        try {
+            if (formId === 'balance') {
+                const newBalanceData = await request('balance/', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        type: 'balance',
+                        balance: balanceStateHandler.formData.balance,
+                    })
                 })
-            })
-            setBalanceData({
-                lastBalance: newBalanceData.balance,
-                lastBalanceDate: new Date(),
-                spendSinceLastBalance: 0,
-                estimatedBalance: newBalanceData.balance,
-                incomeSinceLastBalance: 0
-            });
-            balanceStateHandler.clearForm();
-        } else if (formId === 'income') {
-            const formData = incomeStateHandler.formData;
-            const response = await request('balance/', {
-                method: 'POST',
-                body: JSON.stringify({
-                    type: 'income',
-                    ...formData
-                }),
-            })
-            setBalanceData((prevState) => ({
-                ...prevState,
-                incomeSinceLastBalance: Number(balanceData.incomeSinceLastBalance) + Number(formData.amount),
-                estimatedBalance: Number(balanceData.estimatedBalance) + Number(formData.amount)
-            }));
-            incomeStateHandler.clearForm();
-        };
-
-        setSaving(false);
+                setBalanceData({
+                    lastBalance: newBalanceData.balance,
+                    lastBalanceDate: new Date(),
+                    spendSinceLastBalance: 0,
+                    estimatedBalance: newBalanceData.balance,
+                    incomeSinceLastBalance: 0
+                });
+                balanceStateHandler.clearForm();
+            } else if (formId === 'income') {
+                const formData = incomeStateHandler.formData;
+                const response = await request('balance/', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        type: 'income',
+                        ...formData
+                    }),
+                })
+                setBalanceData((prevState) => ({
+                    ...prevState,
+                    incomeSinceLastBalance: Number(balanceData.incomeSinceLastBalance) + Number(formData.amount),
+                    estimatedBalance: Number(balanceData.estimatedBalance) + Number(formData.amount)
+                }));
+                incomeStateHandler.clearForm();
+            }
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                window.alert('Chyba: ' + e.message)
+            }
+        } finally {
+            setSaving(false);
+        }
     };
 
     const incomeTypes = ["Výplata", "Dar", "Přeplatek", "Úroky", "Jiné"];

@@ -2,6 +2,23 @@ function getCookie(name: string): string {
     return document.cookie.match(new RegExp(`(^|; )${name}=([^;]*)`))?.[2] ?? '';
 }
 
+function collectMessages(value: unknown): string[] {
+    if (typeof value === 'string') return [value];
+    if (Array.isArray(value)) return value.flatMap(collectMessages);
+    if (value && typeof value === 'object') return Object.values(value).flatMap(collectMessages);
+    return [];
+}
+
+function errorMessage(body: unknown, fallback: string): string {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return fallback;
+    const messages = Object.entries(body).flatMap(([field, value]) =>
+        collectMessages(value).map((message) =>
+            ['detail', 'error', 'non_field_errors'].includes(field) ? message : `${field}: ${message}`
+        )
+    );
+    return messages.length > 0 ? messages.join('\n') : fallback;
+}
+
 type RequestConfig = {
     redirectOnAuthError?: boolean;
 };
@@ -28,15 +45,13 @@ export async function request(path: string, requestOptions?: RequestInit, query?
 
     const response = await fetch(url, requestOptions);
     if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-            if (config?.redirectOnAuthError === false) {
-                const body = await response.json().catch(() => null);
-                throw new Error(body?.detail ?? response.statusText);
-            }
+        const body = await response.json().catch(() => null);
+        const csrfFailure = typeof body?.detail === 'string' && body.detail.startsWith('CSRF Failed');
+        if ((response.status === 401 || response.status === 403) && !csrfFailure && config?.redirectOnAuthError !== false) {
             window.location.href = `/login`;
-            return null;
+            return new Promise(() => {});
         }
-        throw new Error(response.statusText);
+        throw new Error(errorMessage(body, response.statusText));
     }
     if (response.status != 204) {
         return await response.json();

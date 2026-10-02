@@ -1,9 +1,9 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from .serializers import BalanceSerializer, ReceiptSerializer, ReceiptRequestSerializer
-from datetime import date, datetime, timedelta
+from .serializers import BalanceSerializer, ReceiptSerializer, ReceiptRequestSerializer, QueryRequestSerializer, IncomeRequestSerializer, BalanceRequestSerializer
+from datetime import date, timedelta
 
 from .models import Receipt, ReceiptItem, Tag, Category, Balance, Income
 from django.conf import settings
@@ -19,6 +19,14 @@ offset = 1 if settings.SUNDAY_WEEK_START else 0
 
 def get_tags(names):
 	return [Tag.objects.get_or_create(name=name)[0] for name in names]
+
+def get_receipt(receipt_id):
+	try:
+		return Receipt.objects.get(id=int(receipt_id))
+	except (TypeError, ValueError):
+		raise ValidationError({ 'id': 'A numeric receipt id is required' })
+	except Receipt.DoesNotExist:
+		raise NotFound(f'Receipt {receipt_id} not found')
 
 def validate_items_sum(receipt):
 	if receipt.type != 'extended':
@@ -124,17 +132,13 @@ def receipt(request):
 
 		payload = validated_payload.validated_data
 
-		try:
-			d = datetime.fromisoformat(payload['date'])
-		except TypeError:
-			return Response({ 'error': f'Received invalid date' }, status=400)
-
+		d = payload['date']
 		iso = (d+ timedelta(days=offset)).isocalendar()
 
 		receipt_date = timezone.now().isoformat() if d.date() == timezone.localdate() else d.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
 
 		receipt_type = payload.get('type')
-		category = Category.objects.get(name=payload['category'])
+		category = payload['category']
 
 		with transaction.atomic():
 			new_receipt = Receipt.objects.create(
@@ -161,7 +165,7 @@ def receipt(request):
 
 		return Response(new_receipt.id, status=201)
 	elif request.method == 'PUT':
-		receipt = Receipt.objects.get(id=request.data['id'])
+		receipt = get_receipt(request.data.get('id'))
 
 		validated_payload = ReceiptRequestSerializer(data=request.data, partial=True)
 		validated_payload.is_valid(raise_exception=True)
@@ -170,9 +174,8 @@ def receipt(request):
 			for k, v in validated_payload.validated_data.items():
 				match k:
 					case 'date':
-						date = datetime.fromisoformat(request.data['date'])
-						setattr(receipt, 'date', date)
-						iso = (date + timedelta(days=offset)).isocalendar()
+						setattr(receipt, 'date', v)
+						iso = (v + timedelta(days=offset)).isocalendar()
 						if receipt.week != iso[1]:
 							setattr(receipt, 'year', iso[0])
 							setattr(receipt, 'week', iso[1])
@@ -181,7 +184,10 @@ def receipt(request):
 						receipt.items.exclude(id__in=sent_ids).delete()
 						for item in v:
 							if 'id' in item:
-								db_item = receipt.items.get(id=item['id'])
+								try:
+									db_item = receipt.items.get(id=item['id'])
+								except ReceiptItem.DoesNotExist:
+									raise ValidationError({ 'items': f'Item {item["id"]} does not belong to receipt {receipt.id}' })
 								db_item.amount = item['amount']
 								db_item.save()
 							else:
@@ -190,8 +196,7 @@ def receipt(request):
 					case 'tags':
 						receipt.tags.set(get_tags(v))
 					case 'category':
-						new_category = Category.objects.get(name=v)
-						setattr(receipt, 'category', new_category)
+						setattr(receipt, 'category', v)
 					case _:
 						setattr(receipt, k, v)
 			receipt.save()
@@ -199,8 +204,7 @@ def receipt(request):
 		serializer = ReceiptSerializer(receipt)
 		return Response(serializer.data, status=200)
 	elif request.method == 'DELETE':
-		id = request.query_params.get('id')
-		Receipt.objects.get(id=id).delete()
+		get_receipt(request.query_params.get('id')).delete()
 		return Response(status=204)
 	else:
 		return Response(status=405)
@@ -220,21 +224,25 @@ def balance(request):
 
 	if request.method == 'POST':
 		if request.data.get('type') == 'income':
-			Income.objects.create(
-			amount=request.data.get('amount'),
-			description=request.data.get('description')
-			)
-			return Response(status=204)
+			payload = IncomeRequestSerializer(data=request.data)
+			payload.is_valid(raise_exception=True)
+			Income.objects.create(**payload.validated_data)
+			return Response(payload.validated_data, status=201)
 		elif request.data.get('type') == 'balance':
-			Balance.objects.create(
-				balance=request.data.get('balance'),
-			)
-			return Response({'balance': request.data.get('balance')},  status=200)
+			payload = BalanceRequestSerializer(data=request.data)
+			payload.is_valid(raise_exception=True)
+			Balance.objects.create(**payload.validated_data)
+			return Response(payload.validated_data, status=200)
 		else:
 			return Response({'error': 'Invalid type'}, status=400)
 	else:
 		balance_data = Balance.objects.get_current_balance()
-		current_balance, income_since, spend_since, original_balance, balance_date = balance_data[0]
+
+		if balance_data:
+			current_balance, income_since, spend_since, original_balance, balance_date = balance_data[0]
+		else:
+			current_balance = income_since = spend_since = original_balance = 0
+			balance_date = timezone.localtime()
 
 		response_data = {
 			"estimated_balance": current_balance,
@@ -249,16 +257,18 @@ def balance(request):
 
 @api_view(['POST'])
 def query(request):
-	date_from = date.fromisoformat(request.data.get('from'))
-	date_to = date.fromisoformat(request.data.get('to'))
-	tags = request.data.get('tags') or []
-	receipts = Receipt.objects.query_receipts(date_from, date_to, tags)
+	payload = QueryRequestSerializer(data=request.data)
+	payload.is_valid(raise_exception=True)
+	data = payload.validated_data
+	receipts = Receipt.objects.query_receipts(data['from'], data['to'], data['tags'])
 	return Response(receipts)
 
 @api_view(['GET'])
 def weekly_summary(request):
 
 	req_year = request.GET.get('year')
+	if req_year is not None and not req_year.isdigit():
+		raise ValidationError({ 'year': 'Expected a numeric year' })
 
 	weeks = Receipt.objects.get_spend_by_week(req_year)
 	years = Receipt.objects.values_list('year', flat=True).distinct()
@@ -272,7 +282,10 @@ def weekly_summary(request):
 
 @api_view(['GET'])
 def week_detail(request, year, week):
-	mon = date.fromisocalendar(year, week, 1)
+	try:
+		mon = date.fromisocalendar(year, week, 1)
+	except ValueError:
+		raise NotFound(f'Week {week} does not exist in {year}')
 	start = mon - timedelta(days=offset)
 	end = mon + timedelta(days=6 - offset)
 	receipts = Receipt.objects.query_receipts(start, end, tags=[], ascending=True)

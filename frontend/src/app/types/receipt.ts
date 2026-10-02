@@ -6,7 +6,7 @@ export interface Receipt {
     id: number;
     type: ReceiptType;
     category: string;
-    date: number;
+    date: string;
     dateCreated: number;
     week: number;
     year: number;
