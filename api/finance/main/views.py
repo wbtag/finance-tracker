@@ -3,7 +3,7 @@ from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .serializers import BalanceSerializer, ReceiptSerializer, ReceiptRequestSerializer, QueryRequestSerializer, IncomeRequestSerializer, BalanceRequestSerializer
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 
 from .models import Receipt, ReceiptItem, Tag, Category, Balance, Income
 from django.conf import settings
@@ -27,6 +27,11 @@ def get_receipt(receipt_id):
 		raise ValidationError({ 'id': 'A numeric receipt id is required' })
 	except Receipt.DoesNotExist:
 		raise NotFound(f'Receipt {receipt_id} not found')
+
+def normalise_date(date):
+	if timezone.is_aware(date):
+		date = timezone.localtime(date)
+	return timezone.make_aware(datetime.combine(date.date(), time.min))
 
 def validate_items_sum(receipt):
 	if receipt.type != 'extended':
@@ -132,10 +137,10 @@ def receipt(request):
 
 		payload = validated_payload.validated_data
 
-		d = payload['date']
-		iso = (d+ timedelta(days=offset)).isocalendar()
+		d = normalise_date(payload['date'])
+		iso = (d + timedelta(days=offset)).isocalendar()
 
-		receipt_date = timezone.now().isoformat() if d.date() == timezone.localdate() else d.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+		receipt_date = timezone.now() if d.date() == timezone.localdate() else d
 
 		receipt_type = payload.get('type')
 		category = payload['category']
@@ -174,9 +179,10 @@ def receipt(request):
 			for k, v in validated_payload.validated_data.items():
 				match k:
 					case 'date':
+						v = normalise_date(v)
 						setattr(receipt, 'date', v)
 						iso = (v + timedelta(days=offset)).isocalendar()
-						if receipt.week != iso[1]:
+						if receipt.week != iso[1] or receipt.year != iso[0]:
 							setattr(receipt, 'year', iso[0])
 							setattr(receipt, 'week', iso[1])
 					case 'items':
