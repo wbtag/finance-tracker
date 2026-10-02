@@ -1,3 +1,4 @@
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import AllowAny
@@ -61,6 +62,7 @@ def session(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
+	SessionAuthentication().enforce_csrf(request)
 	user = authenticate(
 		request,
 		username=request.data.get('username'),

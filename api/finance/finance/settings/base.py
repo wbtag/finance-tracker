@@ -16,9 +16,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
-    'django.contrib.sites',
     'django.contrib.admin',
-    'django.contrib.admindocs',
     'django_otp',
     'django_otp.plugins.otp_totp',
     'main',
@@ -110,5 +108,3 @@ except KeyError as e:
 
 if not 1 <= FISCAL_MONTH_START <= 28:
     raise ImproperlyConfigured(f"month_start must be between 1 and 28, got {FISCAL_MONTH_START}")
-
-SITE_ID = 1
