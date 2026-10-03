@@ -20,7 +20,6 @@ interface QueryFormState {
     from: string;
     to: string;
     queryTags: RawTags;
-    categories: string[];
 }
 
 // Start of the fiscal month containing `date`. A month of -1 rolls back a year
@@ -40,8 +39,7 @@ export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMon
         timeframe: 'fiscalMonth',
         from: format(fiscalMonthStartDate(new Date(), fiscalMonthStart), 'yyyy-MM-dd'),
         to: format(new Date(), 'yyyy-MM-dd'),
-        queryTags: [],
-        categories: []
+        queryTags: []
     };
 
     const stateHandler = useStateHandler(initialState);
@@ -90,7 +88,6 @@ export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMon
             to,
             timeframe,
             queryTags: formData.queryTags,
-            categories: formData.categories
         });
     };
 
@@ -107,10 +104,7 @@ export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMon
     const fetchCategories = async () => {
         const response = await request('categories/');
         setCategories(response);
-        changeFormData((prevState) => ({
-            ...prevState,
-            categories: response
-        }));
+        setActiveCategories(response);
     }
 
     useEffect(() => {
@@ -120,9 +114,7 @@ export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMon
     }, []);
 
     const filteredReceipts = useMemo(() =>
-        activeCategories.length === 0
-            ? receipts
-            : receipts.filter((receipt) => activeCategories.includes(receipt.category)),
+        receipts.filter((receipt) => activeCategories.includes(receipt.category)),
         [receipts, activeCategories]);
 
     const query = async (input?: FormEvent<HTMLFormElement> | { from: string; to: string }) => {
@@ -155,7 +147,7 @@ export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMon
         { name: "Posledních 7 dní", value: "weekToDate" },
         { name: "Tento měsíc", value: "month" },
         { name: "Fiskální měsíc", value: "fiscalMonth" },
-        { name: "Kalendářní měsíc", value: "monthToDate" },
+        { name: "Poslední měsíc", value: "monthToDate" },
         { name: "Od počátku věků", value: "allTime" },
         { name: "Vlastní", value: "custom" },
     ];

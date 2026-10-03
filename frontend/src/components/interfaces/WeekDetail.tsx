@@ -65,7 +65,7 @@ export default function WeekDetail({ week, year }: WeekDetailProps) {
                 ) : null}
                 {loading ? (
                     <p className="text-white/40 text-sm sm:text-base italic text-center py-6">Načítá se...</p>
-                ) : receipts.length === 0 ? (
+                ) : visibleReceipts.length === 0 ? (
                     <p className="text-white/40 text-sm sm:text-base italic text-center py-6">Žádné účtenky.</p>
                 ) : (
                     <div className="w-full max-w-xl mx-auto px-4 sm:px-0 py-2">

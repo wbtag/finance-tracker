@@ -3,6 +3,7 @@ import Tagify from "@yaireo/tagify";
 import { useRef, useEffect } from "react";
 import type { StateHandler } from "../../lib/useStateHandler";
 import type { ReceiptErrors } from "../../lib/receiptValidation";
+import type { RawReceiptItem } from "@/app/types/receipt";
 
 interface ReceiptParamsProps {
     handler: StateHandler<any>;
@@ -60,8 +61,8 @@ export function ReceiptItems({ handler, tags, validationErrors }: ReceiptItemsPr
                         <div />
                     }
                 </div>
-                {formData?.items.map((i: unknown, index: number) => (
-                    <div key={index} className="flex flex-row">
+                {formData?.items.map((item: RawReceiptItem, index: number) => (
+                    <div key={item.key ?? index} className="flex flex-row">
                         <div className="flex flex-wrap f gap-2">
                             <div className="input flex flex-col w-fit static">
                                 <Label label="Částka" />

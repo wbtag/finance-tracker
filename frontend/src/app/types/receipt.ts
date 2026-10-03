@@ -18,6 +18,7 @@ export interface Receipt {
 }
 
 export interface RawReceiptItem {
+    key?: number;
     id?: number;
     amount: number | string;
     tags: string | string[];

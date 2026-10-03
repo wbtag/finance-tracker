@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, type MouseEvent } from "react";
-import AnimateValue from "../ui/AnimateValue";
+import useAnimatedValue from "../ui/useAnimatedValue";
 import { Input, FieldError } from "../ui/elements/formElements";
 import { useStateHandler } from "../lib/useStateHandler";
 import { useValidation, isBlank, isInteger, isPositiveInteger } from "../lib/useValidation";
@@ -34,10 +34,10 @@ export default function Balance() {
 
     const [saving, setSaving] = useState(false);
 
-    const lastBalance = AnimateValue(balanceData.lastBalance);
-    const estimatedBalance = AnimateValue(balanceData.estimatedBalance);
-    const spendSinceLastBalance = AnimateValue(balanceData.spendSinceLastBalance);
-    const incomeSinceLastBalance = AnimateValue(balanceData.incomeSinceLastBalance ?? 0);
+    const lastBalance = useAnimatedValue(balanceData.lastBalance);
+    const estimatedBalance = useAnimatedValue(balanceData.estimatedBalance);
+    const spendSinceLastBalance = useAnimatedValue(balanceData.spendSinceLastBalance);
+    const incomeSinceLastBalance = useAnimatedValue(balanceData.incomeSinceLastBalance ?? 0);
 
     const formattedBalanceDate = () => {
         const lastBalanceDate = balanceData.lastBalanceDate === 0 ? Date.now() : balanceData.lastBalanceDate;
@@ -111,7 +111,7 @@ export default function Balance() {
                 balanceStateHandler.clearForm();
             } else if (formId === 'income') {
                 const formData = incomeStateHandler.formData;
-                const response = await request('balance/', {
+                await request('balance/', {
                     method: 'POST',
                     body: JSON.stringify({
                         type: 'income',
@@ -133,8 +133,6 @@ export default function Balance() {
             setSaving(false);
         }
     };
-
-    const incomeTypes = ["Výplata", "Dar", "Přeplatek", "Úroky", "Jiné"];
 
     return (
         <>

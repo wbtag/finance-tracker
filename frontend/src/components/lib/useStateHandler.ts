@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type Dispatch, type MouseEvent, type SetStateAction } from "react";
+import { emptyItem } from "./tags";
 
 export type FormControlElement = HTMLInputElement | HTMLSelectElement;
 
@@ -39,7 +40,7 @@ export const useStateHandler = <T extends Record<string, any>>(initialState: T):
         const { name } = e.currentTarget;
         setFormData((prevState) => ({
             ...prevState,
-            [name]: [...prevState[name], { amount: 0, tags: [''] }],
+            [name]: [...prevState[name], emptyItem()],
         }));
     };
 
@@ -53,14 +54,13 @@ export const useStateHandler = <T extends Record<string, any>>(initialState: T):
     };
 
     const changeArrayItem = (e: ChangeEvent<FormControlElement>, index: number) => {
-        e.preventDefault();
         const { name, value } = e.target;
         const itemName = name.split('-')[0];
-        const items = formData.items;
-        items[index][itemName] = value;
         setFormData((prev) => ({
             ...prev,
-            items,
+            items: prev.items.map((item: Record<string, unknown>, i: number) =>
+                i === index ? { ...item, [itemName]: value } : item
+            ),
         }));
     };
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type MouseEvent } from "react";
 import { addDays, getISOWeek, getISOWeekYear } from "date-fns";
-import AnimateValue from "../ui/AnimateValue";
+import useAnimatedValue from "../ui/useAnimatedValue";
 import SpendTable from "../ui/SpendTable";
 import Switcher from "../ui/Switcher";
 import {request} from "../lib/request";
@@ -27,9 +27,9 @@ export default function Spend({ sundayWeekStart }: { sundayWeekStart: boolean })
 
     const [balance, setBalance] = useState(0);
 
-    const animatedBalance = AnimateValue(balance);
-    const animatedWeeklySpend = AnimateValue(weeklySpend);
-    const animatedMonthlySpend = AnimateValue(monthlySpend);
+    const animatedBalance = useAnimatedValue(balance);
+    const animatedWeeklySpend = useAnimatedValue(weeklySpend);
+    const animatedMonthlySpend = useAnimatedValue(monthlySpend);
 
     const [spendPeriod, setSpendPeriod] = useState('week');
 

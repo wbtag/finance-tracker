@@ -22,6 +22,13 @@ export function normalizeTags(tags: RawTags | undefined): string[] {
         .filter(Boolean);
 }
 
+// Client-only key for item rows. Keeps each React row (and its Tagify instance)
+// attached to the same item when rows are removed; normalizeItems drops it.
+let lastItemKey = 0;
+export const newItemKey = () => ++lastItemKey;
+
+export const emptyItem = (): RawReceiptItem => ({ key: newItemKey(), amount: 0, tags: [''] });
+
 export function normalizeItems(items: RawReceiptItem[] | undefined) {
     return (items ?? []).map(({ id, amount, tags }) => ({
         id,

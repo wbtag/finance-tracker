@@ -3,7 +3,7 @@ import { ReceiptParams, ReceiptItems } from "./elements/receiptElements";
 import { useStateHandler } from "../lib/useStateHandler";
 import { useValidation } from "../lib/useValidation";
 import { receiptRules } from "../lib/receiptValidation";
-import { normalizeItems, normalizeTags } from "../lib/tags";
+import { newItemKey, normalizeItems, normalizeTags } from "../lib/tags";
 import { useEffect } from "react";
 import { request } from "@/components/lib/request";
 import { Receipt, RawReceiptItem } from "@/app/types/receipt";
@@ -198,7 +198,7 @@ function ReceiptEditForm({ receipt, tags, categories, onCancel, onSaved }: Recei
     const stateHandler = useStateHandler({
         date: toDateInputValue(date),
         ...rest,
-        ...(items ? { items: items.map(item => ({ ...item, tags: [...item.tags] })) } : {}),
+        ...(items ? { items: items.map(item => ({ ...item, key: newItemKey(), tags: [...item.tags] })) } : {}),
     });
 
     const { formData } = stateHandler;

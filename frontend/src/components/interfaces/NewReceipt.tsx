@@ -9,7 +9,7 @@ import { ReceiptParams, ReceiptItems } from "../ui/elements/receiptElements";
 import {request} from "@/components/lib/request";
 import { useValidation } from "../lib/useValidation";
 import { receiptRules } from "../lib/receiptValidation";
-import { normalizeItems, normalizeTags } from "../lib/tags";
+import { emptyItem, normalizeItems, normalizeTags } from "../lib/tags";
 
 interface NewReceiptFormState {
     date: string;
@@ -33,7 +33,7 @@ export default function NewReceipt( { categories }: { categories: string[] } ) {
             if (!stateHandler.formData.items) {
                 stateHandler.changeFormData({
                     ...stateHandler.formData,
-                    items: [{ amount: 0, tags: [''] }]
+                    items: [emptyItem()]
                 });
             }
         }
@@ -46,7 +46,7 @@ export default function NewReceipt( { categories }: { categories: string[] } ) {
         description: '',
         category: categories[0] ?? '',
         tags: [],
-        items: [{ amount: 0, tags: [''] }]
+        items: [emptyItem()]
     }
 
     const stateHandler = useStateHandler(initialState);
