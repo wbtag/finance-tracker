@@ -48,8 +48,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Hardcoded on purpose: only dev.py may relax this, so no prod env var can
-# turn off the second factor.
+# Hardcoded on purpose; change if OTP in production is not desirable. Dev OTP should be managed via .env
 OTP_REQUIRED = True
 
 ROOT_URLCONF = 'finance.urls'
@@ -82,6 +81,13 @@ DATABASES = {
     }
 }
 
+AUTH_PASSWORD_VALIDATORS = [
+      {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+      {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+      {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+      {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
 LANGUAGE_CODE = 'cs-cz'
 TIME_ZONE = 'Europe/Prague'
 USE_I18N = False
@@ -103,8 +109,11 @@ except tomllib.TOMLDecodeError as e:
 try:
     FISCAL_MONTH_START = _config['Budgets']['month_start']
     SUNDAY_WEEK_START = _config['Budgets']['sunday_week_start']
+    APP_NAME = _config['App']['name']
 except KeyError as e:
     raise ImproperlyConfigured(f"Missing key {e} in {CONFIG_PATH}")
 
 if not 1 <= FISCAL_MONTH_START <= 28:
     raise ImproperlyConfigured(f"month_start must be between 1 and 28, got {FISCAL_MONTH_START}")
+
+OTP_TOTP_ISSUER = APP_NAME if APP_NAME else ''
