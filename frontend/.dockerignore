@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.dockerignore
+npm-debug.log
+README.md
+.env*
+playwright-report
+test-results
+.auth
+.claude
+tsconfig.tsbuildinfo
+next-env.d.ts

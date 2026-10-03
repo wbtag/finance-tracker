@@ -1,0 +1,19 @@
+# secrets — injected at runtime via compose env_file
+**/.env
+**/*.env
+
+# local virtualenv / editor / VCS
+venv/
+.idea/
+.git/
+.gitignore
+
+# python bytecode caches
+**/__pycache__/
+**/*.py[cod]
+
+# local dev database
+**/*.sqlite3
+
+Dockerfile
+.dockerignore
