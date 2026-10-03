@@ -41,13 +41,6 @@ def validate_items_sum(receipt):
 	if items_sum != receipt.amount:
 		raise ValidationError({ 'items': f'Items sum ({items_sum}) does not match receipt amount ({receipt.amount})' })
 
-@api_view(['GET'])
-def config(request):
-	return Response({
-		'fiscalMonthStart': fiscal_month_start,
-		'sundayWeekStart': settings.SUNDAY_WEEK_START,
-	})
-
 @ensure_csrf_cookie
 @api_view(['GET'])
 @permission_classes([AllowAny])
