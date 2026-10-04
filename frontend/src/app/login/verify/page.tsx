@@ -13,7 +13,7 @@ export default function VerificationPage() {
     const router = useRouter();
 
     useEffect(() => {
-        request('session/').then((session: SessionDTO) => {
+        request<SessionDTO>('session/').then(session => {
             if (session.verified) {
                 router.replace('/');
             } else if (!session.authenticated) {

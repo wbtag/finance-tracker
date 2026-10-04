@@ -5,22 +5,23 @@
 import { RawTags } from "@/app/types/tags";
 import { Receipt } from "@/app/types/receipt";
 
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { useStateHandler } from "../lib/useStateHandler";
-import { Select, Input } from "../ui/elements/formElements";
+import { Input, Select } from "../ui/elements/formElements";
 import { TagInput } from "../ui/elements/receiptElements";
 import ReceiptRenderer from "../ui/ReceiptRenderer";
 import CategoryPicker from "../ui/CategoryPicker";
 import { request } from "@/components/lib/request";
 import { normalizeTags } from "../lib/tags";
 
-interface QueryFormState {
-    timeframe: string;
+interface QueryParams {
     from: string;
     to: string;
-    queryTags: RawTags;
+    tags: RawTags;
 }
+
+type QueryFormState = QueryParams & { timeframe: string; }
 
 // Start of the fiscal month containing `date`. A month of -1 rolls back a year
 // on its own.
@@ -33,13 +34,13 @@ function fiscalMonthStartDate(date: Date, fiscalMonthStart: number): Date {
     );
 }
 
-export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMonthStart: number; sundayWeekStart: boolean }) {
+export default function Query({ categories, tags, fiscalMonthStart, sundayWeekStart }: { categories: string[]; tags: string[]; fiscalMonthStart: number; sundayWeekStart: boolean }) {
 
     const initialState: QueryFormState = {
         timeframe: 'fiscalMonth',
         from: format(fiscalMonthStartDate(new Date(), fiscalMonthStart), 'yyyy-MM-dd'),
         to: format(new Date(), 'yyyy-MM-dd'),
-        queryTags: []
+        tags: []
     };
 
     const stateHandler = useStateHandler(initialState);
@@ -87,60 +88,40 @@ export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMon
             from,
             to,
             timeframe,
-            queryTags: formData.queryTags,
+            tags: formData.tags,
         });
     };
 
     const [receipts, setReceipts] = useState<Receipt[]>([]);
-    const [categories, setCategories] = useState<string[]>([]);
-    const [activeCategories, setActiveCategories] = useState<string[]>([]);
-    const [tags, setTags] = useState<string[]>([]);
+    const [activeCategories, setActiveCategories] = useState<string[]>(categories);
 
-    const fetchTags = async () => {
-        const tags = await request('tags/');
-        setTags(tags);
-    }
-
-    const fetchCategories = async () => {
-        const response = await request('categories/');
-        setCategories(response);
-        setActiveCategories(response);
+    function queryReceipts({ from, to, tags }: QueryParams): Promise<Receipt[]> {
+        return request('query/', {
+            method: 'POST',
+            body: JSON.stringify({ from, to, tags: normalizeTags(tags) }),
+        });
     }
 
     useEffect(() => {
-        fetchTags();
-        fetchCategories();
-        query();
-    }, []);
+        let ignore = false;
+        const from = format(fiscalMonthStartDate(new Date(), fiscalMonthStart), 'yyyy-MM-dd');
+        const to = format(new Date(), 'yyyy-MM-dd');
+        queryReceipts({ from, to, tags: [] }).then(r => { if (!ignore) setReceipts(r); });
+        return () => { ignore = true; };
+    }, [fiscalMonthStart]);
+
+    const rerunQuery = async () => {
+        setReceipts(await queryReceipts({ from: formData.from, to: formData.to, tags: formData.tags }));
+    };
+
+    const handleQuery = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        await rerunQuery();
+    };
 
     const filteredReceipts = useMemo(() =>
         receipts.filter((receipt) => activeCategories.includes(receipt.category)),
         [receipts, activeCategories]);
-
-    const query = async (input?: FormEvent<HTMLFormElement> | { from: string; to: string }) => {
-
-        let from = formData.from;
-        let to = formData.to;
-
-        if (input && 'preventDefault' in input) {
-            input.preventDefault();
-        } else if (input && input.from && input.to) {
-            from = input.from;
-            to = input.to;
-        }
-
-        const receipts = await request('query/', {
-            method: 'POST',
-            body: JSON.stringify({
-                from,
-                to,
-                tags: normalizeTags(formData.queryTags),
-                offset: 0,
-                limit: 200,
-            })
-        })
-        setReceipts(receipts);
-    };
 
     const timeframeOptions = [
         { name: "Tento týden", value: "week" },
@@ -155,7 +136,7 @@ export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMon
     return (
         <>
             <div className="md:mt-4">
-                <form className="form" onSubmit={query}>
+                <form className="form" onSubmit={handleQuery}>
                     <div>
                         <div className="flex flex-col w-full max-w-120 mx-auto px-4 sm:px-0 py-2">
                             <Select
@@ -184,7 +165,7 @@ export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMon
                                 </div> : <div />
                             }
                             <div className="flex flex-row">
-                                <TagInput handler={stateHandler} tags={tags} name="queryTags" />
+                                <TagInput handler={stateHandler} tags={tags} />
                             </div>
                             <div className="w-full flex justify-center md:justify-start mt-4">
                                 <button className="button button--ux" type="submit">Aktualizovat</button>
@@ -202,7 +183,7 @@ export default function Query({ fiscalMonthStart, sundayWeekStart }: { fiscalMon
             {filteredReceipts.length > 0 ?
                 <div>
                     <div className="w-full max-w-2xl mx-auto px-4 sm:px-0 py-2">
-                        <ReceiptRenderer receipts={filteredReceipts} categories={categories}  />
+                        <ReceiptRenderer receipts={filteredReceipts} categories={categories} tags={tags} onChanged={rerunQuery} />
                     </div>
                 </div> :
                 <div>

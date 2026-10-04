@@ -1,22 +1,14 @@
-'use client';
-import { useEffect, useState } from "react";
 import NewReceipt from "@/components/interfaces/NewReceipt";
-import { request } from "@/components/lib/request";
+import { fetchCategoriesAndTags } from "@/components/lib/fetchCategoriesAndTags";
 
-export default function ReceiptPage() {
+export default async function ReceiptPage() {
 
-    const [categories, setCategories] = useState<string[] | null>(null);
-
-    useEffect(() => {
-        request('categories/').then(setCategories);
-    }, []);
-
-    if (!categories) return null;
+    const [categories, tags] = await fetchCategoriesAndTags();
 
     return (
         <>
             <div>
-                <NewReceipt categories={categories} />
+                <NewReceipt categories={categories} tags={tags} />
             </div>
         </>
     )

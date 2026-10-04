@@ -1,11 +1,21 @@
 import Query from "@/components/interfaces/Query";
 import { getConfig } from "@/components/lib/config";
+import { fetchCategoriesAndTags } from "@/components/lib/fetchCategoriesAndTags";
 
-export default function ReceiptPage() {
+export default async function ReceiptPage() {
+
+    const [ categories, tags ] = await fetchCategoriesAndTags();
+    const { fiscalMonthStart, sundayWeekStart } = getConfig();
+
     return (
         <>
             <div>
-                <Query fiscalMonthStart={getConfig().fiscalMonthStart} sundayWeekStart={getConfig().sundayWeekStart} />
+                <Query
+                    fiscalMonthStart={fiscalMonthStart}
+                    sundayWeekStart={sundayWeekStart}
+                    categories={categories}
+                    tags={tags}
+                />
             </div>
         </>
     )

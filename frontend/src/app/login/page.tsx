@@ -18,7 +18,7 @@ export default function LoginPage() {
     const [checking, setChecking] = useState(true);
 
     useEffect(() => {
-        request('session/').then((session: SessionDTO) => {
+        request<SessionDTO>('session/').then(session => {
             if (session.verified) {
                 router.replace('/');
             } else if (session.authenticated) {

@@ -110,14 +110,14 @@ export function ReceiptItems<T extends ReceiptFormFields>({ handler, tags, valid
     )
 }
 
-interface TagInputProps {
-    handler: StateHandler<any>;
+interface TagInputProps<T> {
+    handler: StateHandler<T>;
     tags: string[];
     index?: number;
-    name?: string;
 }
 
-export function TagInput({ handler, tags, index, name }: TagInputProps) {
+// Without `index` it edits formData.tags; with it, formData.items[index].tags.
+export function TagInput<T extends { tags?: RawTags; items?: RawReceiptItem[] }>({ handler, tags, index }: TagInputProps<T>) {
 
     const {
         handleInput,
@@ -128,11 +128,10 @@ export function TagInput({ handler, tags, index, name }: TagInputProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const tagify = useRef<Tagify | null>(null);
 
-    const idx = index || index === 0 ? index.toString() : null;
+    const inputName = index !== undefined ? `tags-${index}` : "tags";
 
-    const inputName = name || (idx ? `tags-${idx}` : "tags");
-
-    const value = idx ? formData.items[idx].tags : formData[inputName];
+    // Tagify writes tags back as a JSON string; arrays only come from initial state.
+    const value = (index !== undefined ? formData.items?.[index]?.tags : formData.tags) as string | string[] | undefined;
 
     useEffect(() => {
         tagify.current = new Tagify(inputRef.current!, {
@@ -150,7 +149,7 @@ export function TagInput({ handler, tags, index, name }: TagInputProps) {
             tagify.current?.destroy();
             tagify.current = null;
         };
-    }, []);
+    }, [tags]);
 
     useEffect(() => {
         if (tagify.current) {
@@ -174,7 +173,7 @@ export function TagInput({ handler, tags, index, name }: TagInputProps) {
                     className="input px-[10px] py-[11px] border-1 rounded-[5px] md:w-[210px] w-[180px] focus:outline-none placeholder:text-black/25"
                     name={inputName}
                     value={value}
-                    onChange={idx ? (e) => changeArrayItem(e, index!) : handleInput}>
+                    onChange={index !== undefined ? (e) => changeArrayItem(e, index) : handleInput}>
                 </input>
             </div>
         </>

@@ -1,37 +1,27 @@
-import { useState, type MouseEvent } from "react";
-import { ReceiptParams, ReceiptItems } from "./elements/receiptElements";
+import { type MouseEvent, useState } from "react";
+import { ReceiptItems, ReceiptParams } from "./elements/receiptElements";
 import { useStateHandler } from "../lib/useStateHandler";
 import { useValidation } from "../lib/useValidation";
 import { receiptRules } from "../lib/receiptValidation";
 import { newItemKey, normalizeItems, normalizeTags } from "../lib/tags";
-import { useEffect } from "react";
 import { request } from "@/components/lib/request";
-import { Receipt, RawReceiptItem } from "@/app/types/receipt";
+import { RawReceiptItem, Receipt } from "@/app/types/receipt";
 import { RawTags } from "@/app/types/tags";
 
 interface ReceiptRendererProps {
     receipts: Receipt[];
     categories: string[];
+    tags: string[];
+    onChanged: () => void;
 }
 
-export default function ReceiptRenderer({ receipts, categories }: ReceiptRendererProps) {
-
-    const [tags, setTags] = useState<string[]>([]);
-
-    const fetchTags = async () => {
-        const tags = await request('tags/');
-        setTags(tags);
-    };
-
-    useEffect(() => {
-        fetchTags();
-    }, []);
+export default function ReceiptRenderer({ receipts, categories, tags, onChanged }: ReceiptRendererProps) {
 
     return (
         <>
             {
                 receipts.map((receipt, i) => (
-                    <ReceiptRow key={receipt.id ?? i} receipt={receipt} categories={categories} tags={tags} />
+                    <ReceiptRow key={receipt.id ?? i} receipt={receipt} categories={categories} tags={tags} onChanged={onChanged} />
                 ))
             }
         </>
@@ -42,9 +32,10 @@ interface ReceiptRowProps {
     receipt: Receipt;
     categories: string[];
     tags: string[];
+    onChanged: () => void;
 }
 
-function ReceiptRow({ receipt, categories, tags }: ReceiptRowProps) {
+function ReceiptRow({ receipt, categories, tags, onChanged }: ReceiptRowProps) {
     const [expanded, setExpanded] = useState(false);
     const [editing, setEditing] = useState(false);
     const hasItems = Array.isArray(receipt.items) && receipt.items.length > 0;
@@ -55,9 +46,8 @@ function ReceiptRow({ receipt, categories, tags }: ReceiptRowProps) {
             try {
                 await request('receipt/', {method: 'DELETE'}, {
                     id: receipt.id,
-                })
-                window.alert("Účtenka smazána");
-                window.location.reload();
+                });
+                onChanged();
             } catch (e: unknown) {
                 if (e instanceof Error) {
                     window.alert('Chyba: ' + e.message)
@@ -108,7 +98,7 @@ function ReceiptRow({ receipt, categories, tags }: ReceiptRowProps) {
                             tags={tags ?? []}
                             categories={categories}
                             onCancel={() => setEditing(false)}
-                            onSaved={() => { setEditing(false); window.location.reload(); }}
+                            onSaved={() => { setEditing(false); onChanged(); }}
                         />
                     ) : (
                         <>
@@ -253,8 +243,7 @@ function ReceiptEditForm({ receipt, tags, categories, onCancel, onSaved }: Recei
                 await request('receipt/', {
                     method: 'PUT',
                     body: JSON.stringify(editPayload),
-                })
-                window.alert('Změny úspěšně uloženy')
+                });
                 onSaved();
             } else {
                 onCancel();

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Select } from "../ui/elements/formElements";
-import {request} from "../lib/request";
+import { request } from "../lib/request";
 
 export interface WeekSpend {
     number: number;
@@ -16,7 +16,7 @@ export default function Weeks() {
     const [years, setYears] = useState<number[]>([]);
 
     const fetchData = async (year: number) => {
-        const data = await request(`weekly-summary/?year=${year}`);
+        const data: { years: number[]; weeks: WeekSpend[] } = await request(`weekly-summary/?year=${year}`);
         setYears(data.years);
         setWeeks(data.weeks)
     }
