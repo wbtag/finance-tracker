@@ -1,15 +1,17 @@
 import type { ChangeEventHandler, ReactNode } from "react";
 import type { StateHandler } from "../../lib/useStateHandler";
 
-interface InputProps {
+type FieldValue = string | number | undefined;
+
+interface InputProps<T> {
     label: string;
-    handler: StateHandler<any>;
+    handler: StateHandler<T>;
     type?: string;
-    name: string;
+    name: keyof T & string;
     value?: string | number;
 }
 
-export function Input({ label, handler, type, name, value }: InputProps) {
+export function Input<T extends object>({ label, handler, type, name, value }: InputProps<T>) {
 
     const {
         handleInput,
@@ -23,7 +25,7 @@ export function Input({ label, handler, type, name, value }: InputProps) {
                 <input
                     type={type ? type : "text"}
                     name={name}
-                    value={value ?? formData[name]}
+                    value={value ?? formData[name] as FieldValue}
                     onChange={handleInput}
                     className="input px-[10px] py-[11px] border-1 border-white/50 rounded-[5px] w-[210px] focus:outline-none placeholder:text-black/25"
                 />
@@ -34,17 +36,17 @@ export function Input({ label, handler, type, name, value }: InputProps) {
 
 type SelectOption = string | number | { name: string; value: string };
 
-interface SelectProps {
+interface SelectProps<T> {
     label: string;
-    handler?: StateHandler<any>;
-    name: string;
+    handler?: StateHandler<T>;
+    name: keyof T & string;
     options: SelectOption[];
     blankOption?: boolean;
     changeHandler?: ChangeEventHandler<HTMLSelectElement>;
     value?: string | number;
 }
 
-export function Select({ label, handler, name, options, blankOption, changeHandler, value }: SelectProps) {
+export function Select<T extends object = Record<string, unknown>>({ label, handler, name, options, blankOption, changeHandler, value }: SelectProps<T>) {
 
     const {
         handleInput,
@@ -57,7 +59,7 @@ export function Select({ label, handler, name, options, blankOption, changeHandl
                 <Label label={label} />
                 <select
                     name={name}
-                    value={value ?? formData?.[name]}
+                    value={value ?? formData?.[name] as FieldValue}
                     onChange={changeHandler ?? handleInput}
                     className="input px-[10px] py-[11px] border-1 border-white/50 rounded-[5px] w-[210px] focus:outline-none placeholder:text-black/25 bg-[#09002f]"
                 >

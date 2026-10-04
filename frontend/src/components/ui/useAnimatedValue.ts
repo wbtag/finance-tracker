@@ -1,10 +1,9 @@
 'use client'
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function useAnimatedValue(target: number, duration = 250): number {
-  const [value, setValue] = useState(target);
+  const [value, setValue] = useState(0);
   const valueRef = useRef(value);
-  valueRef.current = value;
 
   useEffect(() => {
     const start = valueRef.current;
@@ -14,7 +13,9 @@ export default function useAnimatedValue(target: number, duration = 250): number
 
     const tick = (now: number) => {
       const progress = Math.min((now - startTime) / duration, 1);
-      setValue(start + diff * progress);
+      const next = start + diff * progress;
+      valueRef.current = next;
+      setValue(next);
       if (progress < 1) frame = requestAnimationFrame(tick);
     };
 

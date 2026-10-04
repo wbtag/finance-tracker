@@ -1,7 +1,8 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { type SubmitEvent, useEffect, useState } from 'react';
 import { request } from '@/components/lib/request';
+import type { SessionDTO } from '@/app/types/session';
 
 export default function VerificationPage() {
 
@@ -12,7 +13,7 @@ export default function VerificationPage() {
     const router = useRouter();
 
     useEffect(() => {
-        request('session/').then(session => {
+        request('session/').then((session: SessionDTO) => {
             if (session.verified) {
                 router.replace('/');
             } else if (!session.authenticated) {
@@ -23,7 +24,7 @@ export default function VerificationPage() {
         });
     }, [router]);
 
-    const handleVerification = async (e: any) => {
+    const handleVerification = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
 
@@ -33,8 +34,8 @@ export default function VerificationPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code }),
             }, undefined, { redirectOnAuthError: false });
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : String(err));
             return;
         }
 

@@ -1,8 +1,9 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { type SubmitEvent, useEffect, useState } from 'react';
 import { useStateHandler } from "@/components/lib/useStateHandler";
 import { request } from '@/components/lib/request';
+import type { SessionDTO } from '@/app/types/session';
 
 export default function LoginPage() {
 
@@ -17,7 +18,7 @@ export default function LoginPage() {
     const [checking, setChecking] = useState(true);
 
     useEffect(() => {
-        request('session/').then(session => {
+        request('session/').then((session: SessionDTO) => {
             if (session.verified) {
                 router.replace('/');
             } else if (session.authenticated) {
@@ -28,7 +29,7 @@ export default function LoginPage() {
         });
     }, [router]);
 
-    const handleLogin = async (e: any) => {
+    const handleLogin = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
 
@@ -38,8 +39,8 @@ export default function LoginPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             }, undefined, { redirectOnAuthError: false });
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : String(err));
             return;
         }
 

@@ -4,16 +4,28 @@ import { useRef, useEffect } from "react";
 import type { StateHandler } from "../../lib/useStateHandler";
 import type { ReceiptErrors } from "../../lib/receiptValidation";
 import type { RawReceiptItem } from "@/app/types/receipt";
+import type { RawTags } from "@/app/types/tags";
 
-interface ReceiptParamsProps {
-    handler: StateHandler<any>;
+// Fields the receipt form components read. Both the new-receipt and the
+// receipt-edit form state satisfy it.
+interface ReceiptFormFields {
+    date: string;
+    amount: number | string;
+    description: string;
+    category: string;
+    tags: RawTags;
+    items?: RawReceiptItem[];
+}
+
+interface ReceiptParamsProps<T> {
+    handler: StateHandler<T>;
     categories: string[];
     tags: string[];
     type?: string;
     validationErrors?: ReceiptErrors
 }
 
-export function ReceiptParams({ handler, categories, tags, validationErrors }: ReceiptParamsProps) {
+export function ReceiptParams<T extends ReceiptFormFields>({ handler, categories, tags, validationErrors }: ReceiptParamsProps<T>) {
 
     const { formData } = handler;
 
@@ -39,29 +51,30 @@ export function ReceiptParams({ handler, categories, tags, validationErrors }: R
     )
 }
 
-interface ReceiptItemsProps {
-    handler: StateHandler<any>;
+interface ReceiptItemsProps<T> {
+    handler: StateHandler<T>;
     tags: string[];
     validationErrors?: ReceiptErrors;
 }
 
-export function ReceiptItems({ handler, tags, validationErrors }: ReceiptItemsProps) {
+export function ReceiptItems<T extends ReceiptFormFields>({ handler, tags, validationErrors }: ReceiptItemsProps<T>) {
 
     const { formData, changeArrayItem, addArrayItem, removeArrayItem } = handler;
+    const items = formData.items ?? [];
 
     return (
         <>
             <div>
                 <h2 className="mt-3 text-xl">Položky</h2>
                 <div>
-                    {formData.items.length < 10 ?
+                    {items.length < 10 ?
                         <div>
                             <button className="button button--active mt-2" name="items" onClick={(e) => addArrayItem(e)}>Přidat další položku</button>
                         </div> :
                         <div />
                     }
                 </div>
-                {formData?.items.map((item: RawReceiptItem, index: number) => (
+                {items.map((item, index) => (
                     <div key={item.key ?? index} className="flex flex-row">
                         <div className="flex flex-wrap f gap-2">
                             <div className="input flex flex-col w-fit static">
@@ -69,7 +82,7 @@ export function ReceiptItems({ handler, tags, validationErrors }: ReceiptItemsPr
                                 <input
                                     type="number"
                                     name={`amount-${index}`}
-                                    value={formData.items[index].amount}
+                                    value={item.amount}
                                     onChange={(e) => changeArrayItem(e, index)}
                                     className="input px-[10px] py-[11px] border-1 border-white/50 rounded-[5px] w-[65px] md:w-[180px] focus:outline-none placeholder:text-black/25"
                                 />
@@ -91,7 +104,7 @@ export function ReceiptItems({ handler, tags, validationErrors }: ReceiptItemsPr
                     <FieldError show={validationErrors?.itemsAmount}>Hodnota každé položky musí být kladné číslo a součet hodnot položek musí být roven celkové hodnotě účtenky.</FieldError>
                     <FieldError show={validationErrors?.itemsTags}>Každá položka musí mít alespoň jednu značku.</FieldError>
                 </div>
-                <p>Zbývá do celkové částky: {formData.amount - formData.items.reduce((acc: number, curr: { amount: number | string }) => acc + Number(curr.amount), 0)}</p>
+                <p>Zbývá do celkové částky: {Number(formData.amount) - items.reduce((acc, curr) => acc + Number(curr.amount), 0)}</p>
             </div>
         </>
     )

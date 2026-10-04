@@ -48,6 +48,7 @@ export async function request(path: string, requestOptions?: RequestInit, query?
         const body = await response.json().catch(() => null);
         const csrfFailure = typeof body?.detail === 'string' && body.detail.startsWith('CSRF Failed');
         if ((response.status === 401 || response.status === 403) && !csrfFailure && config?.redirectOnAuthError !== false) {
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
             window.location.href = `/login`;
             return new Promise(() => {});
         }
