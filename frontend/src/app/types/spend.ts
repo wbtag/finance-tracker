@@ -14,3 +14,8 @@ export interface SpendDTO {
         month: number;
     };
 }
+
+export interface WeekSpendDTO {
+    number: number;
+    amount: number;
+}
