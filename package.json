@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "postinstall": "pnpm --dir frontend install",
-    "setup:api": "python3 -m venv api/venv && api/venv/bin/pip install -r api/requirements.txt",
+    "setup:api": "python3 -m venv api/venv && api/venv/bin/pip install -r api/requirements.dev.txt",
     "predev": "docker compose up -d --wait db && cd api && ./venv/bin/python ./finance/manage.py migrate",
     "dev": "concurrently \"cd frontend && pnpm dev\" \"cd api && ./venv/bin/python ./finance/manage.py runserver\"",
     "db:down": "docker compose stop db"
