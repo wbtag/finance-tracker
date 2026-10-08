@@ -1,0 +1,10 @@
+[run]
+source = main
+branch = true
+omit =
+    */migrations/*
+    */main/tests.py
+
+[report]
+show_missing = true
+skip_empty = true
