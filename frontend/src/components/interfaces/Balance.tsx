@@ -1,64 +1,44 @@
 'use client'
-import { useEffect, useState, type MouseEvent } from "react";
+import { type MouseEvent, useState } from "react";
 import useAnimatedValue from "../ui/useAnimatedValue";
-import { Input, FieldError } from "../ui/elements/formElements";
+import { FieldError, Input } from "../ui/elements/formElements";
 import { useStateHandler } from "../lib/useStateHandler";
-import { useValidation, isBlank, isInteger, isPositiveInteger } from "../lib/useValidation";
-import {request} from "@/components/lib/request";
+import { isBlank, isInteger, isPositiveInteger, useValidation } from "../lib/useValidation";
+import { request } from "@/components/lib/request";
+import { BalanceDTO } from "@/app/types/balance";
+import { useRouter } from "next/navigation";
 
-interface BalanceDTO {
-    estimated_balance: number;
-    income_since: number;
-    spend_since: number;
-    balance: number;
-    balance_date: string;
-}
-
-export interface BalanceData {
+interface BalanceFormData {
     lastBalance: number;
-    lastBalanceDate: number | Date;
+    lastBalanceDate: string | Date;
     estimatedBalance: number;
     spendSinceLastBalance: number;
     incomeSinceLastBalance?: number;
 }
 
-export default function Balance() {
+export default function Balance({ balanceData }: { balanceData: BalanceDTO }) {
 
-    const [balanceData, setBalanceData] = useState<BalanceData>({
+    const [balanceFormData, setBalanceFormData] = useState<BalanceFormData>({
         lastBalance: 0,
-        lastBalanceDate: 0,
+        lastBalanceDate: new Date(),
         estimatedBalance: 0,
         spendSinceLastBalance: 0,
         incomeSinceLastBalance: 0
     });
 
+    const router = useRouter();
+
     const [saving, setSaving] = useState(false);
 
-    const lastBalance = useAnimatedValue(balanceData.lastBalance);
-    const estimatedBalance = useAnimatedValue(balanceData.estimatedBalance);
-    const spendSinceLastBalance = useAnimatedValue(balanceData.spendSinceLastBalance);
-    const incomeSinceLastBalance = useAnimatedValue(balanceData.incomeSinceLastBalance ?? 0);
+    const lastBalance = useAnimatedValue(balanceData.balance);
+    const estimatedBalance = useAnimatedValue(balanceData.estimated_balance);
+    const spendSinceLastBalance = useAnimatedValue(balanceData.spend_since);
+    const incomeSinceLastBalance = useAnimatedValue(balanceData.income_since ?? 0);
 
     const formattedBalanceDate = () => {
-        const lastBalanceDate = balanceData.lastBalanceDate === 0 ? Date.now() : balanceData.lastBalanceDate;
-        const date = new Date(lastBalanceDate).toLocaleString('cs-CZ');
+        const date = new Date(balanceData.balance_date).toLocaleString('cs-CZ');
         return date.substring(0, date.length - 3);
     };
-
-    const fetchBalance = async () => {
-        const balanceData: BalanceDTO = await request('balance/');
-        setBalanceData({
-            lastBalance: balanceData.balance,
-            lastBalanceDate: new Date(balanceData.balance_date),
-            estimatedBalance: balanceData.estimated_balance,
-            spendSinceLastBalance: balanceData.spend_since,
-            incomeSinceLastBalance: balanceData.income_since,
-        });
-    };
-
-    useEffect(() => {
-        fetchBalance();
-    }, []);
 
     const balanceInitialState = {
         balance: 0
@@ -94,14 +74,14 @@ export default function Balance() {
 
         try {
             if (formId === 'balance') {
-                const newBalanceData = await request('balance/', {
+                const newBalanceData: { balance: number } = await request('balance/', {
                     method: 'POST',
                     body: JSON.stringify({
                         type: 'balance',
                         balance: balanceStateHandler.formData.balance,
                     })
                 })
-                setBalanceData({
+                setBalanceFormData({
                     lastBalance: newBalanceData.balance,
                     lastBalanceDate: new Date(),
                     spendSinceLastBalance: 0,
@@ -118,10 +98,10 @@ export default function Balance() {
                         ...formData
                     }),
                 })
-                setBalanceData((prevState) => ({
+                setBalanceFormData((prevState) => ({
                     ...prevState,
-                    incomeSinceLastBalance: Number(balanceData.incomeSinceLastBalance) + Number(formData.amount),
-                    estimatedBalance: Number(balanceData.estimatedBalance) + Number(formData.amount)
+                    incomeSinceLastBalance: Number(balanceFormData.incomeSinceLastBalance) + Number(formData.amount),
+                    estimatedBalance: Number(balanceFormData.estimatedBalance) + Number(formData.amount)
                 }));
                 incomeStateHandler.clearForm();
             }
@@ -131,6 +111,7 @@ export default function Balance() {
             }
         } finally {
             setSaving(false);
+            router.refresh();
         }
     };
 

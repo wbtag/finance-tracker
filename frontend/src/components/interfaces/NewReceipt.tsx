@@ -1,12 +1,12 @@
 'use client'
-import React, {useEffect, useState, type MouseEvent } from "react";
+import React, { type MouseEvent, useState } from "react";
 import { format } from "date-fns";
 import { useStateHandler } from "../lib/useStateHandler";
-import { ReceiptType, RawReceiptItem } from "@/app/types/receipt";
+import { RawReceiptItem, ReceiptType } from "@/app/types/receipt";
 import { RawTags } from "@/app/types/tags";
 import Switcher from "../ui/Switcher";
-import { ReceiptParams, ReceiptItems } from "../ui/elements/receiptElements";
-import {request} from "@/components/lib/request";
+import { ReceiptItems, ReceiptParams } from "../ui/elements/receiptElements";
+import { request } from "@/components/lib/request";
 import { useValidation } from "../lib/useValidation";
 import { receiptRules } from "../lib/receiptValidation";
 import { emptyItem, normalizeItems, normalizeTags } from "../lib/tags";
@@ -20,10 +20,9 @@ interface NewReceiptFormState {
     items?: RawReceiptItem[];
 }
 
-export default function NewReceipt( { categories }: { categories: string[] } ) {
+export default function NewReceipt({ categories, tags }: { categories: string[]; tags: string[]; }) {
 
     const [receiptType, setReceiptType] = useState<ReceiptType>('simple');
-    const [tags, setTags] = useState<string[]>([]);
     const [saving, setSaving] = useState(false);
     const { errors, validate } = useValidation(receiptRules(receiptType));
 
@@ -81,23 +80,16 @@ export default function NewReceipt( { categories }: { categories: string[] } ) {
         }
     };
 
-    const fetchTags = async () => {
-        const tags = await request('tags/');
-        setTags(tags);
-    };
-
-    useEffect(() => {
-        fetchTags();
-    }, []);
-
     return (
         <>
             <div className="mt-4">
                 <div className="ml-12 space-y-5">
                     <h1 className="text-2xl">Nová útrata</h1>
                     <div className='inline-flex gap-1'>
-                        <Switcher name='simple' text='Základní' stateTracker={receiptType} changeHandler={handleReceiptTypeChange} />
-                        <Switcher name='extended' text='Rozšířená' stateTracker={receiptType} changeHandler={handleReceiptTypeChange} />
+                        <Switcher name='simple' text='Základní' stateTracker={receiptType}
+                                  changeHandler={handleReceiptTypeChange}/>
+                        <Switcher name='extended' text='Rozšířená' stateTracker={receiptType}
+                                  changeHandler={handleReceiptTypeChange}/>
                     </div>
                     <div className="">
                         <ReceiptParams
@@ -110,9 +102,9 @@ export default function NewReceipt( { categories }: { categories: string[] } ) {
                         {
                             receiptType === "extended" ?
                                 <div className="mb-2">
-                                    <ReceiptItems handler={stateHandler} tags={tags} validationErrors={errors} />
+                                    <ReceiptItems handler={stateHandler} tags={tags} validationErrors={errors}/>
                                 </div>
-                                : <div />
+                                : <div/>
                         }
                     </div>
                     <div className="w-full flex mt-2 pr-12 justify-center md:justify-start">

@@ -1,52 +1,23 @@
 'use client'
 
-import { useEffect, useState, type MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import { addDays, getISOWeek, getISOWeekYear } from "date-fns";
 import useAnimatedValue from "../ui/useAnimatedValue";
 import SpendTable from "../ui/SpendTable";
 import Switcher from "../ui/Switcher";
-import {request} from "../lib/request";
+import { SpendDTO } from "@/app/types/spend";
 import Link from "next/link";
 
-export interface CategorySpend {
-    spend: number;
-    limit: number;
-}
-
-export default function Spend({ sundayWeekStart }: { sundayWeekStart: boolean }) {
+export default function Spend({ sundayWeekStart, spendData }: { sundayWeekStart: boolean; spendData: SpendDTO }) {
 
     const weekDate = addDays(new Date(), sundayWeekStart ? 1 : 0);
 
-    const [weeklySpend, setWeeklySpend] = useState(0);
-    const [weeklyOtherSpend, setWeeklyOtherSpend] = useState(0);
-    const [weeklySpendByCategory, setWeeklySpendByCategory] = useState<Record<string, CategorySpend>>({});
-
-    const [monthlySpend, setMonthlySpend] = useState(0);
-    const [monthlyOtherSpend, setMonthlyOtherSpend] = useState(0);
-    const [monthlySpendByCategory, setMonthlySpendByCategory] = useState<Record<string, CategorySpend>>({});
-
-    const [balance, setBalance] = useState(0);
-
-    const animatedBalance = useAnimatedValue(balance);
-    const animatedWeeklySpend = useAnimatedValue(weeklySpend);
-    const animatedMonthlySpend = useAnimatedValue(monthlySpend);
+    const animatedBalance = useAnimatedValue(spendData.balance);
+    const animatedWeeklySpend = useAnimatedValue(spendData.weekly_spend);
+    const animatedMonthlySpend = useAnimatedValue(spendData.monthly_spend);
 
     const [spendPeriod, setSpendPeriod] = useState('week');
 
-    const fetchData = async () => {
-        const data = await request('overview/');
-        setBalance(data.balance)
-        setWeeklySpend(data.weekly_spend)
-        setWeeklySpendByCategory(data.weekly_spend_categories)
-        setMonthlySpend(data.monthly_spend)
-        setMonthlySpendByCategory(data.monthly_spend_categories)
-        setWeeklyOtherSpend(data.other.week)
-        setMonthlyOtherSpend(data.other.month)
-    }
-
-    useEffect(() => {
-        fetchData()
-    }, []);
 
     const handleSpendPeriodChange = (e: MouseEvent<HTMLButtonElement>) => { setSpendPeriod((e.target as HTMLButtonElement).name) }
 
@@ -83,10 +54,10 @@ export default function Spend({ sundayWeekStart }: { sundayWeekStart: boolean })
                     <div className="pb-4">
                         {spendPeriod === 'week' ?
                             <div>
-                                <SpendTable source={weeklySpendByCategory} other={weeklyOtherSpend} />
+                                <SpendTable source={spendData.weekly_spend_categories} other={spendData.other.week} />
                             </div> :
                             <div>
-                                <SpendTable source={monthlySpendByCategory} other={monthlyOtherSpend} />
+                                <SpendTable source={spendData.monthly_spend_categories} other={spendData.other.month} />
                             </div>
                         }
                     </div>

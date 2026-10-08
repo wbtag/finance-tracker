@@ -1,5 +1,6 @@
-import { useState, type ChangeEvent, type Dispatch, type MouseEvent, type SetStateAction } from "react";
+import { type ChangeEvent, type Dispatch, type MouseEvent, type SetStateAction, useState } from "react";
 import { emptyItem } from "./tags";
+import type { RawReceiptItem } from "@/app/types/receipt";
 
 export type FormControlElement = HTMLInputElement | HTMLSelectElement;
 
@@ -13,7 +14,7 @@ export interface StateHandler<T> {
     changeArrayItem: (e: ChangeEvent<FormControlElement>, index: number) => void;
 }
 
-export const useStateHandler = <T extends Record<string, any>>(initialState: T): StateHandler<T> => {
+export const useStateHandler = <T extends object>(initialState: T): StateHandler<T> => {
 
     const [formData, setFormData] = useState<T>(initialState);
 
@@ -40,7 +41,7 @@ export const useStateHandler = <T extends Record<string, any>>(initialState: T):
         const { name } = e.currentTarget;
         setFormData((prevState) => ({
             ...prevState,
-            [name]: [...prevState[name], emptyItem()],
+            [name]: [...(prevState as Record<string, unknown[]>)[name], emptyItem()],
         }));
     };
 
@@ -49,7 +50,7 @@ export const useStateHandler = <T extends Record<string, any>>(initialState: T):
         const { name } = e.currentTarget;
         setFormData((prev) => ({
             ...prev,
-            [name]: prev[name].filter((_: unknown, i: number) => i !== index),
+            [name]: (prev as Record<string, unknown[]>)[name].filter((_, i) => i !== index),
         }));
     };
 
@@ -58,7 +59,7 @@ export const useStateHandler = <T extends Record<string, any>>(initialState: T):
         const itemName = name.split('-')[0];
         setFormData((prev) => ({
             ...prev,
-            items: prev.items.map((item: Record<string, unknown>, i: number) =>
+            items: (prev as { items: RawReceiptItem[] }).items.map((item, i) =>
                 i === index ? { ...item, [itemName]: value } : item
             ),
         }));

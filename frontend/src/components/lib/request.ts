@@ -23,7 +23,7 @@ type RequestConfig = {
     redirectOnAuthError?: boolean;
 };
 
-export async function request(path: string, requestOptions?: RequestInit, query?: Record<string,string|number>, config?: RequestConfig): Promise<any> {
+export async function request<T = unknown>(path: string, requestOptions?: RequestInit, query?: Record<string,string|number>, config?: RequestConfig): Promise<T> {
     if (requestOptions && requestOptions?.method != 'GET') {
         requestOptions.headers = {
             ...(requestOptions.headers as Record<string, string>),
@@ -48,6 +48,7 @@ export async function request(path: string, requestOptions?: RequestInit, query?
         const body = await response.json().catch(() => null);
         const csrfFailure = typeof body?.detail === 'string' && body.detail.startsWith('CSRF Failed');
         if ((response.status === 401 || response.status === 403) && !csrfFailure && config?.redirectOnAuthError !== false) {
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
             window.location.href = `/login`;
             return new Promise(() => {});
         }
@@ -56,6 +57,7 @@ export async function request(path: string, requestOptions?: RequestInit, query?
     if (response.status != 204) {
         return await response.json();
     } else {
-        return null
+        // 204 has no body; callers of no-content endpoints don't read the result
+        return null as T
     }
 }

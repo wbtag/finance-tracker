@@ -1,36 +1,24 @@
 'use client'
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Select } from "../ui/elements/formElements";
-import {request} from "../lib/request";
+import { WeekSpendDTO } from "@/app/types/spend";
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 
-export interface WeekSpend {
-    number: number;
-    amount: number;
-}
+export default function Weeks({ year, weeks, years }: { year: string; weeks: WeekSpendDTO[]; years: number[]; }) {
 
-export default function Weeks() {
-    const [weeks, setWeeks] = useState<WeekSpend[]>([]);
-    const [year, setYear] = useState<number>(new Date().getFullYear());
-    const [years, setYears] = useState<number[]>([]);
-
-    const fetchData = async (year: number) => {
-        const data = await request(`weekly-summary/?year=${year}`);
-        setYears(data.years);
-        setWeeks(data.weeks)
-    }
-
-    useEffect(() => {
-        fetchData(year)
-    }, [year]);
+    const [isPending, startTransition] = useTransition();
+    const router = useRouter();
 
     return (
         <div className="pad pad-vertical max-w-150">
             <h1 className="text-2xl">Týdenní přehled {year}</h1>
             <Select
                 value={year}
-                changeHandler={(e) => setYear(parseInt(e.target.value))}
+                changeHandler={(e) => startTransition(() => {
+                    router.push(`/weekly-summary/?year=${e.target.value}`);
+                })}
                 name="year"
                 label="Rok"
                 options={years}
