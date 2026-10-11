@@ -25,7 +25,8 @@ type QueryFormState = QueryParams & { timeframe: string; }
 
 // Start of the fiscal month containing `date`. A month of -1 rolls back a year
 // on its own.
-function fiscalMonthStartDate(date: Date, fiscalMonthStart: number): Date {
+// TODO: move to separate file
+export function fiscalMonthStartDate(date: Date, fiscalMonthStart: number): Date {
     return new Date(
         date.getFullYear(),
         date.getDate() >= fiscalMonthStart ?
