@@ -1,0 +1,9 @@
+exclude = [
+    'migrations'
+]
+
+[lint.per-file-ignores]
+'**/models.py' = ["RUF012"]
+
+[format]
+quote-style = 'single'
