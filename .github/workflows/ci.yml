@@ -48,7 +48,12 @@ jobs:
           cache: pip
           cache-dependency-path: api/requirements*.txt
       - run: pip install -r requirements.dev.txt
+        id: install
+      - run: ruff check
+      - run: ruff format --check
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: pytest --cov=main --cov-report=term-missing
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
   frontend:
     runs-on: ubuntu-latest
     defaults:
