@@ -4,13 +4,18 @@ from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework.test import APIClient
 
+
 @pytest.fixture
 def user(db):
-    return get_user_model().objects.create_user(username='tester', password='secret-pass-123')
+    return get_user_model().objects.create_user(
+        username='tester', password='secret-pass-123'
+    )
+
 
 @pytest.fixture
 def api_client():
     return APIClient()
+
 
 @pytest.fixture
 def auth_client(api_client, user):

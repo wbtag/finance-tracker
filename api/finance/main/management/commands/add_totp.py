@@ -1,12 +1,12 @@
 import io
 
 import qrcode
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django_otp.plugins.otp_totp.models import TOTPDevice
-from django.contrib.auth import get_user_model
+
 
 class Command(BaseCommand):
-
     def get_user(self, username):
         User = get_user_model()
         try:
@@ -21,7 +21,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         if not options['username']:
-            raise CommandError("Username is required.")
+            raise CommandError('Username is required.')
 
         user = self.get_user(options['username'])
 
@@ -34,6 +34,8 @@ class Command(BaseCommand):
         buf = io.StringIO()
         qr.print_ascii(out=buf, invert=True)
 
-        self.stdout.write(f"Use the following URL to add device to your TOTP app: {device.config_url}")
-        self.stdout.write("Or scan this QR code:")
+        self.stdout.write(
+            f'Use the following URL to add device to your TOTP app: {device.config_url}'
+        )
+        self.stdout.write('Or scan this QR code:')
         self.stdout.write(buf.getvalue())
