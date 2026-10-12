@@ -7,9 +7,11 @@ from rest_framework.test import APIClient
 
 CREDENTIALS = {'username': 'tester', 'password': 'secret-pass-123'}
 
+
 @pytest.fixture
 def otp_device(user):
     return TOTPDevice.objects.create(user=user, name='default', confirmed=True)
+
 
 @pytest.fixture
 def otp_client(auth_client, otp_device):
@@ -19,11 +21,20 @@ def otp_client(auth_client, otp_device):
     session.save()
     return auth_client
 
+
 def current_token(device):
-    token = totp(device.bin_key, step=device.step, t0=device.t0, digits=device.digits, drift=device.drift)
+    token = totp(
+        device.bin_key,
+        step=device.step,
+        t0=device.t0,
+        digits=device.digits,
+        drift=device.drift,
+    )
     return str(token).zfill(device.digits)
 
+
 # session
+
 
 class TestSession:
     def test_anonymous(self, api_client, db):
@@ -35,10 +46,13 @@ class TestSession:
         response = api_client.get(reverse('session'))
         assert 'csrftoken' in response.cookies
 
-    @pytest.mark.parametrize('otp_required, verified', [
-        pytest.param(False, True, id='otp-not-required'),
-        pytest.param(True, False, id='otp-required'),
-    ])
+    @pytest.mark.parametrize(
+        'otp_required, verified',
+        [
+            pytest.param(False, True, id='otp-not-required'),
+            pytest.param(True, False, id='otp-required'),
+        ],
+    )
     def test_logged_in(self, auth_client, settings, otp_required, verified):
         settings.OTP_REQUIRED = otp_required
         response = auth_client.get(reverse('session'))
@@ -49,7 +63,9 @@ class TestSession:
         response = otp_client.get(reverse('session'))
         assert response.data == {'authenticated': True, 'verified': True}
 
+
 # login
+
 
 class TestLogin:
     @pytest.mark.parametrize('otp_required', [True, False])
@@ -61,11 +77,14 @@ class TestLogin:
         assert response.data == {'mfa_required': otp_required}
         assert api_client.get(reverse('session')).data['authenticated'] is True
 
-    @pytest.mark.parametrize('data', [
-        pytest.param({**CREDENTIALS, 'password': 'wrong'}, id='wrong-password'),
-        pytest.param({**CREDENTIALS, 'username': 'nobody'}, id='unknown-user'),
-        pytest.param({}, id='missing-credentials'),
-    ])
+    @pytest.mark.parametrize(
+        'data',
+        [
+            pytest.param({**CREDENTIALS, 'password': 'wrong'}, id='wrong-password'),
+            pytest.param({**CREDENTIALS, 'username': 'nobody'}, id='unknown-user'),
+            pytest.param({}, id='missing-credentials'),
+        ],
+    )
     def test_rejects_invalid_credentials(self, api_client, user, data):
         response = api_client.post(reverse('login'), data=data)
 
@@ -82,10 +101,14 @@ class TestLogin:
         client.get(reverse('session'))
         token = client.cookies['csrftoken'].value
 
-        response = client.post(reverse('login'), data=CREDENTIALS, HTTP_X_CSRFTOKEN=token)
+        response = client.post(
+            reverse('login'), data=CREDENTIALS, HTTP_X_CSRFTOKEN=token
+        )
         assert response.status_code == 200
 
+
 # verify
+
 
 class TestVerify:
     def test_rejects_anonymous(self, api_client, db):
@@ -105,17 +128,22 @@ class TestVerify:
 
     def test_accepts_valid_token(self, auth_client, otp_device, settings):
         settings.OTP_REQUIRED = True
-        response = auth_client.post(reverse('verify'), data={'code': current_token(otp_device)})
+        response = auth_client.post(
+            reverse('verify'), data={'code': current_token(otp_device)}
+        )
 
         assert response.status_code == 200
         assert response.data == {'username': 'tester'}
         assert auth_client.get(reverse('session')).data['verified'] is True
 
-    @pytest.mark.parametrize('code', [
-        pytest.param('invalid', id='non-numeric'),
-        pytest.param('', id='empty'),
-        pytest.param(None, id='missing'),
-    ])
+    @pytest.mark.parametrize(
+        'code',
+        [
+            pytest.param('invalid', id='non-numeric'),
+            pytest.param('', id='empty'),
+            pytest.param(None, id='missing'),
+        ],
+    )
     def test_rejects_invalid_token(self, auth_client, otp_device, settings, code):
         settings.OTP_REQUIRED = True
         data = {} if code is None else {'code': code}
@@ -124,11 +152,19 @@ class TestVerify:
         assert response.status_code == 401
         assert auth_client.get(reverse('session')).data['verified'] is False
 
+
 def test_full_login_flow_with_otp(api_client, otp_device, settings):
     settings.OTP_REQUIRED = True
 
-    assert api_client.post(reverse('login'), data=CREDENTIALS).data == {'mfa_required': True}
+    assert api_client.post(reverse('login'), data=CREDENTIALS).data == {
+        'mfa_required': True
+    }
     assert api_client.get(reverse('tags')).status_code == 403
 
-    assert api_client.post(reverse('verify'), data={'code': current_token(otp_device)}).status_code == 200
+    assert (
+        api_client.post(
+            reverse('verify'), data={'code': current_token(otp_device)}
+        ).status_code
+        == 200
+    )
     assert api_client.get(reverse('tags')).status_code == 200

@@ -1,8 +1,8 @@
+import tomllib
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 from environs import env
-import tomllib
 
 env.read_env()
 
@@ -21,7 +21,7 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_totp',
     'main',
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -77,15 +77,17 @@ DATABASES = {
         'USER': env('DATABASE_USER'),
         'PASSWORD': env('DATABASE_PASSWORD'),
         'HOST': env('DATABASE_HOST'),
-        'PORT': '5432'
+        'PORT': '5432',
     }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-      {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-      {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-      {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-      {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'
+    },
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 LANGUAGE_CODE = 'cs-cz'
@@ -96,24 +98,30 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-CONFIG_PATH = Path(env("CONFIG_PATH", default=str(BASE_DIR.parent.parent / "config.toml")))
+CONFIG_PATH = Path(
+    env('CONFIG_PATH', default=str(BASE_DIR.parent.parent / 'config.toml'))
+)
 
 try:
-    with CONFIG_PATH.open("rb") as f:
+    with CONFIG_PATH.open('rb') as f:
         _config = tomllib.load(f)
 except FileNotFoundError:
-    raise ImproperlyConfigured(f"No config file at {CONFIG_PATH}. Copy config.example.toml to config.toml.")
+    raise ImproperlyConfigured(
+        f'No config file at {CONFIG_PATH}. Copy config.example.toml to config.toml.'
+    )
 except tomllib.TOMLDecodeError as e:
-    raise ImproperlyConfigured(f"Malformed TOML in {CONFIG_PATH}: {e}")
+    raise ImproperlyConfigured(f'Malformed TOML in {CONFIG_PATH}: {e}')
 
 try:
     FISCAL_MONTH_START = _config['Budgets']['month_start']
     SUNDAY_WEEK_START = _config['Budgets']['sunday_week_start']
     APP_NAME = _config['App']['name']
 except KeyError as e:
-    raise ImproperlyConfigured(f"Missing key {e} in {CONFIG_PATH}")
+    raise ImproperlyConfigured(f'Missing key {e} in {CONFIG_PATH}')
 
 if not 1 <= FISCAL_MONTH_START <= 28:
-    raise ImproperlyConfigured(f"month_start must be between 1 and 28, got {FISCAL_MONTH_START}")
+    raise ImproperlyConfigured(
+        f'month_start must be between 1 and 28, got {FISCAL_MONTH_START}'
+    )
 
 OTP_TOTP_ISSUER = APP_NAME if APP_NAME else ''

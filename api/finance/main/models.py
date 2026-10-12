@@ -1,16 +1,18 @@
 from datetime import datetime, time, timedelta
 
-from django.db import models, connection
+from django.db import connection, models
 from django.utils import timezone
 
+
 def dictfetchall(cursor):
-	columns = [col[0] for col in cursor.description]
-	return [dict(zip(columns, row)) for row in cursor.fetchall()]
+    columns = [col[0] for col in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
 
 class BalanceManager(models.Manager):
-	def get_current_balance(self):
-		with connection.cursor() as cursor:
-			cursor.execute("""
+    def get_current_balance(self):
+        with connection.cursor() as cursor:
+            cursor.execute("""
 				WITH latest_balance AS (
 					SELECT *
 					FROM main_balance b
@@ -32,28 +34,34 @@ class BalanceManager(models.Manager):
 					lb.balance AS balance,
 					lb.created_at AS balance_date
 				FROM latest_balance lb, receipts r, income i
-			"""
-		   )
-			return cursor.fetchall()
+			""")
+            return cursor.fetchall()
+
 
 class ReceiptManager(models.Manager):
-	def get_spend_by_week(self, year):
-		with connection.cursor() as cursor:
-			cursor.execute("""
+    def get_spend_by_week(self, year):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
 				SELECT COALESCE(SUM(r.amount),0) as amount, r.week as number
 				FROM main_receipt r
 				WHERE r.year = %s
 				GROUP BY r.week
 				ORDER BY r.week DESC
-			""", [year])
-			return dictfetchall(cursor)
+			""",
+                [year],
+            )
+            return dictfetchall(cursor)
 
-	def query_receipts(self, date_from, date_to, tags, ascending=False):
-		order = 'ASC' if ascending else 'DESC'
-		start = timezone.make_aware(datetime.combine(date_from, time.min))
-		end = timezone.make_aware(datetime.combine(date_to + timedelta(days=1), time.min))
-		with connection.cursor() as cursor:
-			cursor.execute(f"""
+    def query_receipts(self, date_from, date_to, tags, ascending=False):
+        order = 'ASC' if ascending else 'DESC'
+        start = timezone.make_aware(datetime.combine(date_from, time.min))
+        end = timezone.make_aware(
+            datetime.combine(date_to + timedelta(days=1), time.min)
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
 				WITH receipts AS (
 					SELECT r.id, r.date, r.type, c.name, r.description, r.amount,
            				COALESCE(array_agg(t.name) FILTER ( WHERE t.name IS NOT NULL ), ARRAY[]::text[]) AS tags,
@@ -94,99 +102,122 @@ class ReceiptManager(models.Manager):
 				GROUP BY r.id, r.type, r.amount, r.date, r.name, r.description, r.tags, r.has_query_tags
 				HAVING bool_or(r.has_query_tags = 1 OR ri.has_query_tags = 1)
 				ORDER BY r.date {order}
-			""", {'tags': tags, 'from': start, 'to': end })
-			return dictfetchall(cursor)
+			""",
+                {'tags': tags, 'from': start, 'to': end},
+            )
+            return dictfetchall(cursor)
+
 
 class CategoryManager(models.Manager):
-	def get_weekly_category_spend(self, cutoff):
-		with connection.cursor() as cursor:
-			cursor.execute("""
+    def get_weekly_category_spend(self, cutoff):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
 				SELECT c.id, c.name, c.week_limit, c.is_misc, c.exclude_from_overview as exclude, COALESCE(SUM(r.amount),0) as amount
 				FROM main_receipt r
 				RIGHT JOIN main_category c ON r.category_id = c.id AND r.date >= %s
 				GROUP BY c.name, c.id, c.week_limit
 				ORDER BY c.week_limit DESC, c.name ASC
-				""", [cutoff])
-			output = dictfetchall(cursor)
-			return {row['name']: {
-				'spend': row['amount'],
-				'limit': row['week_limit'],
-				'exclude': row['exclude'],
-				'is_misc': row['is_misc']
-			} for row in output}
+				""",
+                [cutoff],
+            )
+            output = dictfetchall(cursor)
+            return {
+                row['name']: {
+                    'spend': row['amount'],
+                    'limit': row['week_limit'],
+                    'exclude': row['exclude'],
+                    'is_misc': row['is_misc'],
+                }
+                for row in output
+            }
 
-	def get_monthly_category_spend(self, cutoff):
-		with connection.cursor() as cursor:
-			cursor.execute("""
+    def get_monthly_category_spend(self, cutoff):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
 					SELECT c.id, c.name, c.month_limit, c.is_misc, c.exclude_from_overview as exclude, COALESCE(SUM(r.amount),0) as amount
 					FROM main_receipt r
 					RIGHT JOIN main_category c ON r.category_id = c.id AND r.date >= %s
 					GROUP BY c.name, c.id, c.month_limit
 					ORDER BY c.month_limit DESC, c.name ASC
-				""", [cutoff])
-			output = dictfetchall(cursor)
-			return {row['name']: {
-				'spend': row['amount'],
-				'limit': row['month_limit'],
-				'exclude': row['exclude'],
-				'is_misc': row['is_misc']
-			} for row in output}
+				""",
+                [cutoff],
+            )
+            output = dictfetchall(cursor)
+            return {
+                row['name']: {
+                    'spend': row['amount'],
+                    'limit': row['month_limit'],
+                    'exclude': row['exclude'],
+                    'is_misc': row['is_misc'],
+                }
+                for row in output
+            }
+
 
 class Tag(models.Model):
-	name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50, unique=True)
+
 
 class Category(models.Model):
-	name = models.CharField(max_length=255, unique=True)
-	exclude_from_overview = models.BooleanField(default=False)
-	is_misc = models.BooleanField(default=False)
-	week_limit = models.IntegerField()
-	month_limit = models.IntegerField()
+    name = models.CharField(max_length=255, unique=True)
+    exclude_from_overview = models.BooleanField(default=False)
+    is_misc = models.BooleanField(default=False)
+    week_limit = models.IntegerField()
+    month_limit = models.IntegerField()
 
-	objects = CategoryManager()
+    objects = CategoryManager()
+
 
 class Receipt(models.Model):
-	types = [
-		('simple', 'Simple'),
-		('extended', 'Extended'),
-	]
+    types = [
+        ('simple', 'Simple'),
+        ('extended', 'Extended'),
+    ]
 
-	date = models.DateTimeField()
-	category = models.ForeignKey(Category, on_delete=models.CASCADE)
-	type = models.CharField(max_length=255, choices=types)
-	description = models.CharField(max_length=255)
-	amount = models.IntegerField()
-	tags = models.ManyToManyField(Tag, related_name='receipts', blank=True)
-	week = models.IntegerField()
-	year = models.IntegerField()
-	created_at = models.DateTimeField(auto_now_add=True)
-	updated_at = models.DateTimeField(auto_now=True)
+    date = models.DateTimeField()
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    type = models.CharField(max_length=255, choices=types)
+    description = models.CharField(max_length=255)
+    amount = models.IntegerField()
+    tags = models.ManyToManyField(Tag, related_name='receipts', blank=True)
+    week = models.IntegerField()
+    year = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-	objects = ReceiptManager()
+    objects = ReceiptManager()
 
-	class Meta:
-		constraints = [
-			models.CheckConstraint(condition=models.Q(amount__gt=0), name='receipt_amount_positive'),
-		]
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0), name='receipt_amount_positive'
+            ),
+        ]
+
 
 class ReceiptItem(models.Model):
-	receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE, related_name='items')
-	tags = models.ManyToManyField(Tag, related_name='receiptItems', blank=True)
-	amount = models.IntegerField()
+    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE, related_name='items')
+    tags = models.ManyToManyField(Tag, related_name='receiptItems', blank=True)
+    amount = models.IntegerField()
 
-	class Meta:
-		constraints = [
-			models.CheckConstraint(condition=models.Q(amount__gt=0), name='receiptitem_amount_positive'),
-		]
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gt=0), name='receiptitem_amount_positive'
+            ),
+        ]
+
 
 class Balance(models.Model):
-	balance = models.IntegerField()
-	created_at = models.DateTimeField(auto_now_add=True)
+    balance = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
-	objects = BalanceManager()
+    objects = BalanceManager()
+
 
 class Income(models.Model):
-	amount = models.IntegerField()
-	description = models.CharField(max_length=255)
-	created_at = models.DateTimeField(auto_now_add=True)
-
-
+    amount = models.IntegerField()
+    description = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)

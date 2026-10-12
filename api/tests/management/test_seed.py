@@ -4,10 +4,10 @@ from io import StringIO
 import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
-
 from main.models import Balance, Category
 
 pytestmark = pytest.mark.django_db
+
 
 def test_seed_categories_and_balance():
     out = StringIO()
@@ -19,10 +19,12 @@ def test_seed_categories_and_balance():
     assert 'Balance: set to 100.' in out.getvalue()
     assert out.getvalue().rstrip().endswith('Seeded.')
 
+
 def test_seed_cli_arguments():
     call_command('seed', '--categories', 'A', 'B', '--balance', '100')
     assert set(Category.objects.values_list('name', flat=True)) == {'A', 'B'}
     assert Balance.objects.get().balance == 100
+
 
 def test_seed_categories_only():
     call_command('seed', categories=['A'])
@@ -32,6 +34,7 @@ def test_seed_categories_only():
     assert category.exclude_from_overview is False
     assert category.is_misc is False
     assert not Balance.objects.exists()
+
 
 def test_seed_existing_category_untouched():
     Category.objects.create(name='A', week_limit=500, month_limit=2000, is_misc=True)
@@ -45,6 +48,7 @@ def test_seed_existing_category_untouched():
     assert 'Category "A": already exists.' in out.getvalue()
     assert 'Category "B": created.' in out.getvalue()
 
+
 def test_seed_duplicate_category_in_args():
     out = StringIO()
     call_command('seed', categories=['A', 'A'], stdout=out)
@@ -52,10 +56,12 @@ def test_seed_duplicate_category_in_args():
     assert 'Category "A": created.' in out.getvalue()
     assert 'Category "A": already exists.' in out.getvalue()
 
+
 def test_seed_balance_only():
     call_command('seed', balance=100)
     assert Balance.objects.get().balance == 100
     assert not Category.objects.exists()
+
 
 def test_seed_zero_balance():
     # 0 is falsy, the command must still treat it as provided
@@ -64,6 +70,7 @@ def test_seed_zero_balance():
     assert Balance.objects.get().balance == 0
     assert 'Balance: set to 0.' in out.getvalue()
 
+
 def test_seed_existing_balance_skipped():
     Balance.objects.create(balance=100)
     out = StringIO()
@@ -71,8 +78,12 @@ def test_seed_existing_balance_skipped():
     assert Balance.objects.get().balance == 100
     assert 'Balance: already set, skipped.' in out.getvalue()
 
+
 def test_seed_reject_no_arguments():
-    with pytest.raises(CommandError, match=re.escape('Nothing to seed, pass --categories and/or --balance.')):
+    with pytest.raises(
+        CommandError,
+        match=re.escape('Nothing to seed, pass --categories and/or --balance.'),
+    ):
         call_command('seed')
     assert not Category.objects.exists()
     assert not Balance.objects.exists()
