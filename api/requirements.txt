@@ -6,4 +6,3 @@ environs==15.0.1
 psycopg2-binary==2.9.12
 gunicorn==26.2.0
 qrcode==8.2
-ruff==0.17.0
