@@ -1,33 +1,34 @@
-import { renderHook, act } from '@testing-library/react'
-import { describe, it, expect } from 'vitest';
+import { act, renderHook } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { useStateHandler } from "@/components/lib/useStateHandler";
 
-let data: Record<string,any> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const data: Record<string, any> = {
 	amount: 0,
-	description: '',
+	description: "",
 	date: new Date(),
-}
+};
 
-describe('useStateHandler', () => {
-	it('stores formData in correct form', () => {
-		const { result } = renderHook(() => useStateHandler(data))
+describe("useStateHandler", () => {
+	it("stores formData in correct form", () => {
+		const { result } = renderHook(() => useStateHandler(data));
 		const { formData } = result.current;
 		expect(formData).toEqual(data);
 	});
-	it('handles parameter change', () => {
-		const { result } = renderHook(() => useStateHandler(data))
+	it("handles parameter change", () => {
+		const { result } = renderHook(() => useStateHandler(data));
 		const { handleInput } = result.current;
-		// @ts-ignore
-		act(() => handleInput({ target: { name: 'amount', value: '20' }}));
-		expect(result.current.formData.amount).toEqual('20');
+		// @ts-expect-error target typing
+		act(() => handleInput({ target: { name: "amount", value: "20" } }));
+		expect(result.current.formData.amount).toEqual("20");
 	});
-	it('handles bulk formData change', () => {
+	it("handles bulk formData change", () => {
 		const { result } = renderHook(() => useStateHandler(data));
 		const { changeFormData } = result.current;
 		act(() => changeFormData({ changed: true }));
 		expect(result.current.formData).to.deep.equal({ changed: true });
 	});
-	it('handles form clearance', () => {
+	it("handles form clearance", () => {
 		const { result } = renderHook(() => useStateHandler(data));
 		const { clearForm, changeFormData } = result.current;
 		act(() => changeFormData({}));
@@ -35,50 +36,88 @@ describe('useStateHandler', () => {
 		act(() => clearForm());
 		expect(result.current.formData).to.deep.equal(data);
 	});
-	it('handles adding to an array', () => {
-		const { result } = renderHook(() => useStateHandler({
-			...data,
-			items: []
-		}));
+	it("handles adding to an array", () => {
+		const { result } = renderHook(() =>
+			useStateHandler({
+				...data,
+				items: [],
+			}),
+		);
 		const { addArrayItem } = result.current;
-		// @ts-ignore
-		act(() => addArrayItem({ preventDefault: () => null, currentTarget: { name: 'items' }}));
+		act(() =>
+			addArrayItem({
+				preventDefault: () => null,
+				// @ts-expect-error target typing
+				currentTarget: { name: "items" },
+			}),
+		);
 		expect(result.current.formData.items).to.deep.equal([
-			{ key: 1, amount: 0, tags: ['']}
-		])
+			{ key: 1, amount: 0, tags: [""] },
+		]);
 	});
-	it('handles removal from array', () => {
-		const { result } = renderHook(() => useStateHandler({
+	it("handles removal from array", () => {
+		const { result } = renderHook(() =>
+			useStateHandler({
 				...data,
 				items: [
-					{ key: 1, amount: 100, tags: ['test1'] },
-					{ key: 2, amount: 200, tags: ['test2'] },
-					{ key: 3, amount: 300, tags: ['test3'] }
-				]
-		}));
+					{ key: 1, amount: 100, tags: ["test1"] },
+					{ key: 2, amount: 200, tags: ["test2"] },
+					{ key: 3, amount: 300, tags: ["test3"] },
+				],
+			}),
+		);
 		const { removeArrayItem } = result.current;
-		// @ts-ignore
-		act(() => removeArrayItem({ preventDefault: () => null, currentTarget: { name: 'items' } }, 1));
+		act(() =>
+			removeArrayItem(
+				// @ts-expect-error target typing
+				{ preventDefault: () => null, currentTarget: { name: "items" } },
+				1,
+			),
+		);
 		expect(result.current.formData.items.length).toBe(2);
-		expect(result.current.formData.items[1]).to.deep.equal({ key: 3, amount: 300, tags: ['test3'] });
+		expect(result.current.formData.items[1]).to.deep.equal({
+			key: 3,
+			amount: 300,
+			tags: ["test3"],
+		});
 	});
-	it('handles param change in array item', () => {
-		const { result } = renderHook(() => useStateHandler({
-			...data,
-			items: [
-				{ key: 1, amount: 100, tags: ['test1'] },
-				{ key: 2, amount: 200, tags: ['test2'] },
-				{ key: 3, amount: 300, tags: ['test3'] }
-			]
-		}));
+	it("handles param change in array item", () => {
+		const { result } = renderHook(() =>
+			useStateHandler({
+				...data,
+				items: [
+					{ key: 1, amount: 100, tags: ["test1"] },
+					{ key: 2, amount: 200, tags: ["test2"] },
+					{ key: 3, amount: 300, tags: ["test3"] },
+				],
+			}),
+		);
 		const { changeArrayItem } = result.current;
 
-		act(() => changeArrayItem(
-			// @ts-ignore
-			{ preventDefault: () => null, target: { name: 'amount-1', value: 150 } }, 1));
-		act(() => changeArrayItem(
-			// @ts-ignore
-			{ preventDefault: () => null, target: { name: 'tags-1', value: ['edit'] } }, 1));
-		expect(result.current.formData.items[1]).to.deep.equal({ key: 2, amount: 150, tags: ['edit'] });
+		act(() =>
+			changeArrayItem(
+				{
+					preventDefault: () => null,
+					// @ts-expect-error target typing
+					target: { name: "amount-1", value: 150 },
+				},
+				1,
+			),
+		);
+		act(() =>
+			changeArrayItem(
+				{
+					preventDefault: () => null,
+					// @ts-expect-error target typing
+					target: { name: "tags-1", value: ["edit"] },
+				},
+				1,
+			),
+		);
+		expect(result.current.formData.items[1]).to.deep.equal({
+			key: 2,
+			amount: 150,
+			tags: ["edit"],
+		});
 	});
-})
+});

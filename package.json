@@ -9,7 +9,8 @@
     "dev": "concurrently \"cd frontend && pnpm dev\" \"cd api && ./venv/bin/python ./finance/manage.py runserver\"",
     "db:down": "docker compose stop db",
     "format:api": "cd api && ./venv/bin/ruff check --fix && ./venv/bin/ruff format",
-    "lint:api": "cd api && ./venv/bin/ruff check && ./venv/bin/ruff format --check"
+    "lint:api": "cd api && ./venv/bin/ruff check && ./venv/bin/ruff format --check",
+    "lint:frontend": "cd frontend && pnpm lint && pnpm format:check"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

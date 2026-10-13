@@ -1,4 +1,4 @@
 export interface SessionDTO {
-    authenticated: boolean;
-    verified: boolean;
+	authenticated: boolean;
+	verified: boolean;
 }
