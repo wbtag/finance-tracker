@@ -44,10 +44,10 @@ describe("useStateHandler", () => {
 			}),
 		);
 		const { addArrayItem } = result.current;
-		// @ts-expect-error target typing
 		act(() =>
 			addArrayItem({
 				preventDefault: () => null,
+				// @ts-expect-error target typing
 				currentTarget: { name: "items" },
 			}),
 		);
@@ -67,9 +67,9 @@ describe("useStateHandler", () => {
 			}),
 		);
 		const { removeArrayItem } = result.current;
-		// @ts-expect-error target typing
 		act(() =>
 			removeArrayItem(
+				// @ts-expect-error target typing
 				{ preventDefault: () => null, currentTarget: { name: "items" } },
 				1,
 			),
@@ -96,9 +96,9 @@ describe("useStateHandler", () => {
 
 		act(() =>
 			changeArrayItem(
-				// @ts-expect-error target typing
 				{
 					preventDefault: () => null,
+					// @ts-expect-error target typing
 					target: { name: "amount-1", value: 150 },
 				},
 				1,
@@ -106,9 +106,9 @@ describe("useStateHandler", () => {
 		);
 		act(() =>
 			changeArrayItem(
-				// @ts-expect-error target typing
 				{
 					preventDefault: () => null,
+					// @ts-expect-error target typing
 					target: { name: "tags-1", value: ["edit"] },
 				},
 				1,
