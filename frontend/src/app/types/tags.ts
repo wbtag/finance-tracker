@@ -1,5 +1,5 @@
 export interface TagifyTag {
-    value: string;
+	value: string;
 }
 
 export type RawTags = string | Array<TagifyTag | string>;
