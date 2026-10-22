@@ -34,6 +34,7 @@ describe("normalizeTags", () => {
 		{ tags, expected, id }: {
 			tags: unknown;
 			expected: string[] | undefined[];
+			id: string;
 		}) => {
 			const normalizedTags = normalizeTags(tags as RawReceiptItem["tags"]);
 			expect(normalizedTags).toEqual(expected);

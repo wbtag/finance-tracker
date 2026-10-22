@@ -15,9 +15,6 @@ export default function Weeks({
 	weeks: WeekSpendDTO[];
 	years: number[];
 }) {
-	const [, startTransition] = useTransition();
-	const router = useRouter();
-
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [isPending, startTransition] = useTransition();
 	const router = useRouter();
