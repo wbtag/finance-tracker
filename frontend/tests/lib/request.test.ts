@@ -56,27 +56,20 @@ describe("request", () => {
 		expect(data).to.deep.equal(null);
 	});
 	it.each([
-		{ code: 401, error: "Unauthorized" },
-		{ code: 403, error: "Forbidden" },
-	])(
-		"redirects to login and never settles on $code response",
-		async ({ code, error }) => {
-			response = { error };
-			ok = false;
-			status = code;
-			expect(await settleState(request("test/endpoint"))).toBe("pending");
-			expect(window.location.href).toBe("/login");
-		},
-	);
-	it("encodes query parameters", async () => {
-		await request(
-			"test/endpoint",
-			{ method: "GET" },
-			{
-				origin: "test function",
-				page: 2,
-			},
-		);
+		{ code: 401, error: 'Unauthorized' },
+		{ code: 403, error: 'Forbidden' },
+	])('redirects to login and never settles on $code response', async ({ code, error }) => {
+		response = { error };
+		ok = false;
+		status = code;
+		expect(await settleState(request('test/endpoint'))).toBe('pending');
+		expect(window.location.href).toBe('/login');
+	});
+	it('encodes query parameters', async () => {
+		await request('test/endpoint', { method: 'GET' }, {
+			origin: 'test function',
+			page: 2
+		});
 		const [url] = fetchMock.mock.calls[0];
 		expect(url).toEqual("/api/test/endpoint?origin=test%20function&page=2");
 	});
