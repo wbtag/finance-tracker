@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import Link from "next/link";
 import { Select } from "../ui/elements/formElements";
@@ -6,7 +6,17 @@ import { WeekSpendDTO } from "@/app/types/spend";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-export default function Weeks({ year, weeks, years }: { year: string; weeks: WeekSpendDTO[]; years: number[]; }) {
+export default function Weeks({
+	year,
+	weeks,
+	years,
+}: {
+	year: string;
+	weeks: WeekSpendDTO[];
+	years: number[];
+}) {
+	const [, startTransition] = useTransition();
+	const router = useRouter();
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [isPending, startTransition] = useTransition();
@@ -17,9 +27,11 @@ export default function Weeks({ year, weeks, years }: { year: string; weeks: Wee
 			<h1 className="text-2xl">Týdenní přehled {year}</h1>
 			<Select
 				value={year}
-				changeHandler={(e) => startTransition(() => {
-					router.push(`/weekly-summary/?year=${e.target.value}`);
-				})}
+				changeHandler={(e) =>
+					startTransition(() => {
+						router.push(`/weekly-summary/?year=${e.target.value}`);
+					})
+				}
 				name="year"
 				label="Rok"
 				options={years}

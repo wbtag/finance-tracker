@@ -1,4 +1,4 @@
-import { Input, Select, Label, FieldError } from "./formElements";
+import { FieldError, Input, Label, Select } from "./formElements";
 import Tagify from "@yaireo/tagify";
 import { useRef, useEffect, useId } from "react";
 import type { StateHandler } from "../../lib/useStateHandler";
@@ -63,8 +63,11 @@ interface ReceiptItemsProps<T> {
 	validationErrors?: ReceiptErrors;
 }
 
-export function ReceiptItems<T extends ReceiptFormFields>({ handler, tags, validationErrors }: ReceiptItemsProps<T>) {
-
+export function ReceiptItems<T extends ReceiptFormFields>({
+	handler,
+	tags,
+	validationErrors,
+}: ReceiptItemsProps<T>) {
 	const { formData, changeArrayItem, addArrayItem, removeArrayItem } = handler;
 	const items = formData.items ?? [];
 

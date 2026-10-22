@@ -1,9 +1,14 @@
-'use client'
+"use client";
 import { type MouseEvent, useState } from "react";
 import useAnimatedValue from "../ui/useAnimatedValue";
 import { FieldError, Input } from "../ui/elements/formElements";
 import { useStateHandler } from "../lib/useStateHandler";
-import { isBlank, isInteger, isPositiveInteger, useValidation } from "../lib/useValidation";
+import {
+	isBlank,
+	isInteger,
+	isPositiveInteger,
+	useValidation,
+} from "../lib/useValidation";
 import { request } from "@/components/lib/request";
 import { BalanceDTO } from "@/app/types/balance";
 import { useRouter } from "next/navigation";
@@ -33,10 +38,12 @@ export default function Balance({ balanceData }: { balanceData: BalanceDTO }) {
 	const lastBalance = useAnimatedValue(balanceData.balance);
 	const estimatedBalance = useAnimatedValue(balanceData.estimated_balance);
 	const spendSinceLastBalance = useAnimatedValue(balanceData.spend_since);
-	const incomeSinceLastBalance = useAnimatedValue(balanceData.income_since ?? 0);
+	const incomeSinceLastBalance = useAnimatedValue(
+		balanceData.income_since ?? 0,
+	);
 
 	const formattedBalanceDate = () => {
-		const date = new Date(balanceData.balance_date).toLocaleString('cs-CZ');
+		const date = new Date(balanceData.balance_date).toLocaleString("cs-CZ");
 		return date.substring(0, date.length - 3);
 	};
 
@@ -164,5 +171,5 @@ export default function Balance({ balanceData }: { balanceData: BalanceDTO }) {
 				</div>
 			</div>
 		</>
-	)
+	);
 }

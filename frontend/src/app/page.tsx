@@ -4,12 +4,15 @@ import { serverRequest } from "@/components/lib/serverRequest";
 import { SpendDTO } from "@/app/types/spend";
 
 export default async function Page() {
-    const spendData: SpendDTO = await serverRequest('overview/');
-    return (
-        <>
-            <div>
-                <Spend sundayWeekStart={getConfig().sundayWeekStart} spendData={spendData} />
-            </div>
-        </>
-    );
+	const spendData: SpendDTO = await serverRequest("overview/");
+	return (
+		<>
+			<div>
+				<Spend
+					sundayWeekStart={getConfig().sundayWeekStart}
+					spendData={spendData}
+				/>
+			</div>
+		</>
+	);
 }

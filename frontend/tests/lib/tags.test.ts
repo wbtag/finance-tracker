@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { normalizeTags, normalizeItems, emptyItem } from "@/components/lib/tags";
+import { describe, expect, it } from "vitest";
+import {
+	emptyItem,
+	normalizeItems,
+	normalizeTags,
+} from "@/components/lib/tags";
 import { RawReceiptItem } from "@/app/types/receipt";
 
-describe('normalizeTags', () => {
+describe("normalizeTags", () => {
 	it.each([
 		{ tags: [], expected: [], id: 'empty array' },
 		{ tags: '', expected: [], id: 'empty string' },
@@ -30,16 +34,15 @@ describe('normalizeTags', () => {
 		{ tags, expected, id }: {
 			tags: unknown;
 			expected: string[] | undefined[];
-			id: string;
-		}
-	) => {
-		const normalizedTags = normalizeTags(tags as RawReceiptItem['tags']);
-		expect(normalizedTags).toEqual(expected);
-	});
+		}) => {
+			const normalizedTags = normalizeTags(tags as RawReceiptItem["tags"]);
+			expect(normalizedTags).toEqual(expected);
+		},
+	);
 });
 
-describe('normalizeItems', () => {
-	it('returns empty array on undefined input', () => {
+describe("normalizeItems", () => {
+	it("returns empty array on undefined input", () => {
 		const items = normalizeItems(undefined);
 		expect(items).toEqual([]);
 	});
@@ -66,24 +69,24 @@ describe('normalizeItems', () => {
 		expect(item).toEqual({ id: 1, amount: 20, tags: ['test1'] });
 	});
 
-	it('normalizes Tagify JSON tags and keeps item order', () => {
+	it("normalizes Tagify JSON tags and keeps item order", () => {
 		const items = normalizeItems([
-			{ key: 1, amount: '200', tags: '[{"value":"test1"}]' },
-			{ key: 2, amount: '800', tags: 'test2, test3' },
+			{ key: 1, amount: "200", tags: '[{"value":"test1"}]' },
+			{ key: 2, amount: "800", tags: "test2, test3" },
 		]);
 		expect(items).toEqual([
-			{ id: undefined, amount: 200, tags: ['test1'] },
-			{ id: undefined, amount: 800, tags: ['test2', 'test3'] },
+			{ id: undefined, amount: 200, tags: ["test1"] },
+			{ id: undefined, amount: 800, tags: ["test2", "test3"] },
 		]);
 	});
 });
 
-describe('emptyItem', () => {
-	it('returns item template when called', () => {
-		expect(emptyItem()).to.deep.equal({ key: 1, amount: 0, tags: [''] });
+describe("emptyItem", () => {
+	it("returns item template when called", () => {
+		expect(emptyItem()).to.deep.equal({ key: 1, amount: 0, tags: [""] });
 	});
 
-	it('increments item key', () => {
+	it("increments item key", () => {
 		const item1 = emptyItem();
 		const item2 = emptyItem();
 		expect(item2.key).to.be.gt(item1.key as number);
