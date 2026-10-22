@@ -6,10 +6,14 @@ describe('normalizeTags', () => {
 	it.each([
 		{ tags: [], expected: [], id: 'empty array' },
 		{ tags: '', expected: [], id: 'empty string' },
-		{ tags: [{ value: 'test1' }, { value: 'test2' }], expected: ['test1', 'test2'], id: 'array of value objects'},
+		{ tags: [{ value: 'test1' }, { value: 'test2' }], expected: ['test1', 'test2'], id: 'array of value objects' },
 		{ tags: ['test1', 'test2'], expected: ['test1', 'test2'], id: 'array of strings' },
 		{ tags: ['test1', { value: 'test2' }], expected: ['test1', 'test2'], id: 'mixed array' },
-		{ tags: [' test1 ', { value: ' test2 ' }, '  ', { value: '' }], expected: ['test1', 'test2'], id: 'array with whitespace and blank entries' },
+		{
+			tags: [' test1 ', { value: ' test2 ' }, '  ', { value: '' }],
+			expected: ['test1', 'test2'],
+			id: 'array with whitespace and blank entries'
+		},
 		{ tags: ['test1', null, { value: null }], expected: ['test1'], id: 'array with null entries' },
 		{ tags: null, expected: [], id: 'null' },
 		{ tags: undefined, expected: [], id: 'undefined' },
@@ -22,6 +26,7 @@ describe('normalizeTags', () => {
 		{ tags: 'test1', expected: ['test1'], id: 'single tag string' },
 		{ tags: '123', expected: ['123'], id: 'non-array JSON string' },
 	])('parses $id', (
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		{ tags, expected, id }: {
 			tags: unknown;
 			expected: string[] | undefined[];
@@ -40,17 +45,23 @@ describe('normalizeItems', () => {
 	});
 
 	it.each([
-		{ items: [ { id: 1, amount: '20', tags: [{value: 'test1'}, {value: 'test2'}]}], id: 'string amount, tags as value objects' },
-		{ items: [ { id: 1, amount: 20, tags: [{value: 'test1'}, {value: 'test2'}]}], id: 'int amount, tags as value objects' },
-		{ items: [ { id: 1, amount: 20, tags: ['test1', 'test2']}], id: 'int amount, tags as string arrays' },
-	])
-	('parses input with $id', ( { items, id } ) => {
-		const normalizedItems = normalizeItems(items as RawReceiptItem[]);
-		expect(normalizedItems).toEqual([ {id: 1, amount: 20, tags: ['test1', 'test2']} ]);
-	});
+		{
+			items: [{ id: 1, amount: '20', tags: [{ value: 'test1' }, { value: 'test2' }] }],
+			id: 'string amount, tags as value objects'
+		},
+		{
+			items: [{ id: 1, amount: 20, tags: [{ value: 'test1' }, { value: 'test2' }] }],
+			id: 'int amount, tags as value objects'
+		},
+		{ items: [{ id: 1, amount: 20, tags: ['test1', 'test2'] }], id: 'int amount, tags as string arrays' },
+	]) // eslint-disable-next-line @typescript-eslint/no-unused-vars
+		('parses input with $id', ({ items, id }) => {
+			const normalizedItems = normalizeItems(items as RawReceiptItem[]);
+			expect(normalizedItems).toEqual([{ id: 1, amount: 20, tags: ['test1', 'test2'] }]);
+		});
 
 	it('drops the client-only key', () => {
-		const [item] = normalizeItems([ { key: 5, id: 1, amount: 20, tags: ['test1'] } ]);
+		const [item] = normalizeItems([{ key: 5, id: 1, amount: 20, tags: ['test1'] }]);
 		expect(item).not.toHaveProperty('key');
 		expect(item).toEqual({ id: 1, amount: 20, tags: ['test1'] });
 	});

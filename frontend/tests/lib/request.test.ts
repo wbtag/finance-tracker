@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { request } from "@/components/lib/request";
 
-let response: Record<string,any> | null = {};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let response: Record<string, any> | null = {};
 let status = 200;
 let ok = true;
 
@@ -10,6 +11,7 @@ const settleState = (promise: Promise<unknown>, timeout = 50) => Promise.race([
 	new Promise((resolve) => setTimeout(() => resolve('pending'), timeout)),
 ]);
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fetchMock = vi.fn((_url: string, _options?: RequestInit) =>
 	Promise.resolve({
 		ok,
@@ -60,7 +62,7 @@ describe('request', () => {
 		expect(window.location.href).toBe('/login');
 	});
 	it('encodes query parameters', async () => {
-		await request('test/endpoint', { method: 'GET'}, {
+		await request('test/endpoint', { method: 'GET' }, {
 			origin: 'test function',
 			page: 2
 		});
