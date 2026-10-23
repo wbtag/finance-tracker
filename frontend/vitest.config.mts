@@ -10,6 +10,6 @@ export default defineConfig({
 			enabled: true,
 			provider: "v8",
 		},
-		globals: true
+		globals: true,
 	},
 });
