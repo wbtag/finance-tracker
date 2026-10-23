@@ -22,13 +22,12 @@ interface BalanceFormData {
 }
 
 export default function Balance({ balanceData }: { balanceData: BalanceDTO }) {
-
 	const [balanceFormData, setBalanceFormData] = useState<BalanceFormData>({
 		lastBalance: 0,
 		lastBalanceDate: new Date(),
 		estimatedBalance: 0,
 		spendSinceLastBalance: 0,
-		incomeSinceLastBalance: 0
+		incomeSinceLastBalance: 0,
 	});
 
 	const router = useRouter();
@@ -48,14 +47,14 @@ export default function Balance({ balanceData }: { balanceData: BalanceDTO }) {
 	};
 
 	const balanceInitialState = {
-		balance: ''
+		balance: "",
 	};
 
 	const balanceStateHandler = useStateHandler(balanceInitialState);
 
 	const incomeInitialState = {
-		amount: '',
-		description: '',
+		amount: "",
+		description: "",
 	};
 
 	const incomeStateHandler = useStateHandler(incomeInitialState);
@@ -65,8 +64,10 @@ export default function Balance({ balanceData }: { balanceData: BalanceDTO }) {
 	});
 
 	const incomeValidation = useValidation({
-		amount: ({ amount }: typeof incomeInitialState) => !isPositiveInteger(amount),
-		description: ({ description }: typeof incomeInitialState) => isBlank(description),
+		amount: ({ amount }: typeof incomeInitialState) =>
+			!isPositiveInteger(amount),
+		description: ({ description }: typeof incomeInitialState) =>
+			isBlank(description),
 	});
 
 	const submitForm = async (e: MouseEvent<HTMLButtonElement>) => {
@@ -74,47 +75,58 @@ export default function Balance({ balanceData }: { balanceData: BalanceDTO }) {
 
 		const formId = (e.target as HTMLButtonElement).form?.id;
 
-		if (formId === 'balance' && !balanceValidation.validate(balanceStateHandler.formData)) return;
-		if (formId === 'income' && !incomeValidation.validate(incomeStateHandler.formData)) return;
+		if (
+			formId === "balance" &&
+			!balanceValidation.validate(balanceStateHandler.formData)
+		)
+			return;
+		if (
+			formId === "income" &&
+			!incomeValidation.validate(incomeStateHandler.formData)
+		)
+			return;
 
 		setSaving(true);
 
 		try {
-			if (formId === 'balance') {
-				const newBalanceData: { balance: number } = await request('balance/', {
-					method: 'POST',
+			if (formId === "balance") {
+				const newBalanceData: { balance: number } = await request("balance/", {
+					method: "POST",
 					body: JSON.stringify({
-						type: 'balance',
+						type: "balance",
 						balance: balanceStateHandler.formData.balance,
-					})
-				})
+					}),
+				});
 				setBalanceFormData({
 					lastBalance: newBalanceData.balance,
 					lastBalanceDate: new Date(),
 					spendSinceLastBalance: 0,
 					estimatedBalance: newBalanceData.balance,
-					incomeSinceLastBalance: 0
+					incomeSinceLastBalance: 0,
 				});
 				balanceStateHandler.clearForm();
-			} else if (formId === 'income') {
+			} else if (formId === "income") {
 				const formData = incomeStateHandler.formData;
-				await request('balance/', {
-					method: 'POST',
+				await request("balance/", {
+					method: "POST",
 					body: JSON.stringify({
-						type: 'income',
-						...formData
+						type: "income",
+						...formData,
 					}),
-				})
+				});
 				setBalanceFormData((prevState) => ({
 					...prevState,
-					incomeSinceLastBalance: Number(balanceFormData.incomeSinceLastBalance) + Number(formData.amount),
-					estimatedBalance: Number(balanceFormData.estimatedBalance) + Number(formData.amount)
+					incomeSinceLastBalance:
+						Number(balanceFormData.incomeSinceLastBalance) +
+						Number(formData.amount),
+					estimatedBalance:
+						Number(balanceFormData.estimatedBalance) + Number(formData.amount),
 				}));
 				incomeStateHandler.clearForm();
 			}
 		} catch (e: unknown) {
 			if (e instanceof Error) {
-				window.alert('Chyba: ' + e.message)
+				window.alert("Chyba: " + e.message);
 			}
 		} finally {
 			setSaving(false);
@@ -125,7 +137,7 @@ export default function Balance({ balanceData }: { balanceData: BalanceDTO }) {
 	return (
 		<>
 			<div className="mt-4">
-				<div className="flex flex-wrap gap-2 w-full justify-center">
+				<div className="flex w-full flex-wrap justify-center gap-2">
 					<div id="estimated-balance" className="w-80 text-center">
 						<p className="text-3xl">{estimatedBalance.toFixed()} Kč</p>
 						<p className="">Aktuální odhadovaný zůstatek</p>
@@ -143,30 +155,54 @@ export default function Balance({ balanceData }: { balanceData: BalanceDTO }) {
 						<p className="">Zůstatek k {formattedBalanceDate()}</p>
 					</div>
 				</div>
-				<div className="flex flex-wrap gap-2 mt-4 ml-12 w-full md:justify-center">
+				<div className="mt-4 ml-12 flex w-full flex-wrap gap-2 md:justify-center">
 					<form className="my-3 w-100" id="income">
 						<p className="text-xl">Nový příjem</p>
-						<Input label="Popis" name="description" handler={incomeStateHandler}/>
-						<FieldError show={incomeValidation.errors.description}>Popis chybí</FieldError>
-						<Input label="Částka" name="amount" type="text" handler={incomeStateHandler}
-							   options={{ inputMode: "numeric", autoComplete: "off" }}/>
-						<FieldError show={incomeValidation.errors.amount}>Neplatná částka</FieldError>
+						<Input
+							label="Popis"
+							name="description"
+							handler={incomeStateHandler}
+						/>
+						<FieldError show={incomeValidation.errors.description}>
+							Popis chybí
+						</FieldError>
+						<Input
+							label="Částka"
+							name="amount"
+							type="text"
+							handler={incomeStateHandler}
+							options={{ inputMode: "numeric", autoComplete: "off" }}
+						/>
+						<FieldError show={incomeValidation.errors.amount}>
+							Neplatná částka
+						</FieldError>
 						<button
 							className="button button--active mt-3"
 							onClick={submitForm}
 							disabled={saving}
-						>{saving ? 'Ukládá se...' : 'Uložit'}</button>
+						>
+							{saving ? "Ukládá se..." : "Uložit"}
+						</button>
 					</form>
 					<form className="my-3 w-80" id="balance">
 						<p className="text-xl">Aktualizace zůstatku</p>
-						<Input label="Nový zůstatek" type="text" name="balance" handler={balanceStateHandler}
-							   options={{ inputMode: "numeric", autoComplete: "off" }}/>
-						<FieldError show={balanceValidation.errors.balance}>Neplatný zůstatek</FieldError>
+						<Input
+							label="Nový zůstatek"
+							type="text"
+							name="balance"
+							handler={balanceStateHandler}
+							options={{ inputMode: "numeric", autoComplete: "off" }}
+						/>
+						<FieldError show={balanceValidation.errors.balance}>
+							Neplatný zůstatek
+						</FieldError>
 						<button
 							className="button button--active mt-3"
 							onClick={submitForm}
 							disabled={saving}
-						>{saving ? 'Ukládá se...' : 'Uložit'}</button>
+						>
+							{saving ? "Ukládá se..." : "Uložit"}
+						</button>
 					</form>
 				</div>
 			</div>
