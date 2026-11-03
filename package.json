@@ -2,17 +2,25 @@
   "name": "finance-tracker",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@12.15.0",
   "scripts": {
-    "postinstall": "pnpm --dir frontend install",
+    "postinstall": "pnpm --dir frontend install && pnpm --dir e2e install",
     "setup:api": "python3 -m venv api/venv && api/venv/bin/pip install -r api/requirements.dev.txt",
-    "predev": "docker compose up -d --wait db && cd api && ./venv/bin/python ./finance/manage.py migrate",
-    "dev": "concurrently \"cd frontend && pnpm dev\" \"cd api && ./venv/bin/python ./finance/manage.py runserver\"",
-    "db:down": "docker compose stop db",
-    "format:api": "cd api && ./venv/bin/ruff check --fix && ./venv/bin/ruff format",
-    "lint:api": "cd api && ./venv/bin/ruff check && ./venv/bin/ruff format --check",
-    "lint:frontend": "cd frontend && pnpm lint && pnpm format:check"
+    "predev": "docker compose up -d --wait db && cd api && venv/bin/python finance/manage.py migrate",
+    "dev": "concurrently \"cd frontend && pnpm dev\" \"cd api && venv/bin/python finance/manage.py runserver\"",
+    "prestart": "pnpm --dir frontend build && cd api && venv/bin/python finance/manage.py migrate && venv/bin/python finance/manage.py seed_test",
+    "start": "concurrently \"cd frontend && pnpm start\" \"cd api && venv/bin/python finance/manage.py runserver\"",
+    "lint": "pnpm lint:api && pnpm lint:frontend",
+    "lint:format": "pnpm format:api && pnpm lint:frontend",
+    "lint:api": "cd api && venv/bin/ruff check && venv/bin/ruff format --check",
+    "lint:frontend": "cd frontend && pnpm lint && pnpm format:check",
+    "format:api": "cd api && venv/bin/ruff check --fix && venv/bin/ruff format",
+    "start:e2e": "export DATABASE_NAME=test && start-server-and-test start \"http://localhost:3000|tcp:localhost:8000\" test:e2e",
+    "test:e2e": "pnpm --dir e2e test",
+    "db:reset:e2e": "export DATABASE_NAME=test api/venv/bin/python api/finance/manage.py reset_db --noinput"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "start-server-and-test": "^3.0.13"
   }
 }
