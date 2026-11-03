@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [devel, master]
+    branches: [ devel, master ]
 
 permissions:
   contents: read
@@ -20,9 +20,9 @@ jobs:
       db:
         image: postgres:17
         env:
-          POSTGRES_USER: finance
-          POSTGRES_PASSWORD: finance
-        ports: ["5432:5432"]
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: [ "5432:5432" ]
         options: >-
           --health-cmd pg_isready
           --health-interval 5s
@@ -30,9 +30,9 @@ jobs:
           --health-retries 10
     env:
       DJANGO_SECRET_KEY: ci-only-not-secret
-      DATABASE_NAME: finance
-      DATABASE_USER: finance
-      DATABASE_PASSWORD: finance
+      DATABASE_NAME: postgres
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
       DATABASE_HOST: localhost
       CONFIG_PATH: ${{ github.workspace }}/config.example.toml
     defaults:
@@ -80,3 +80,54 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: pnpm vitest run
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+  e2e:
+    needs: [ api, frontend ]
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        ports: [ "5432:5432" ]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: test
+      DATABASE_HOST: localhost
+      DJANGO_SECRET_KEY: ci-only-not-secret
+      CONFIG_PATH: ${{ github.workspace }}/config.example.toml
+      pnpm_config_store_dir: ${{ github.workspace }}/.pnpm-store
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('e2e/pnpm-lock.yaml') }}
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24.21.0
+          package-json-file: 'package.json'
+          install: false
+          cache: true
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            frontend/pnpm-lock.yaml
+            e2e/pnpm-lock.yaml
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: api/requirements*.txt
+      - run: pnpm setup:api
+      - run: pnpm install
+      - run: pnpm start:e2e
