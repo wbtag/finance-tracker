@@ -1,8 +1,7 @@
-from environs import env
-
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from environs import env
 from main.models import Balance, Category
 
 env.read_env()
