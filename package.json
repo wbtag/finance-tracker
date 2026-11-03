@@ -17,7 +17,7 @@
     "format:api": "cd api && venv/bin/ruff check --fix && venv/bin/ruff format",
     "start:e2e": "export DATABASE_NAME=test && start-server-and-test start \"http://localhost:3000|tcp:localhost:8000\" test:e2e",
     "test:e2e": "pnpm --dir e2e test",
-    "db:reset:e2e": "export DATABASE_NAME=test api/venv/bin/python api/finance/manage.py reset_db --noinput"
+    "db:reset:e2e": "export DATABASE_NAME=test && cd api && venv/bin/python finance/manage.py reset_db --noinput"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
