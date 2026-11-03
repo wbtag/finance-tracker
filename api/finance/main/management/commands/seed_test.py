@@ -19,9 +19,7 @@ class Command(BaseCommand):
             )
 
         User = get_user_model()
-        test_user = User(
-            username=test_user_username
-        )
+        test_user = User(username=test_user_username)
 
         print(test_user_password)
 
@@ -32,14 +30,16 @@ class Command(BaseCommand):
         test_user_totp_key = env('TEST_USER_TOTP_KEY', None)
 
         if test_user_totp_key:
-            TOTPDevice.objects.create(user=test_user, name='E2E', key=test_user_totp_key)
+            TOTPDevice.objects.create(
+                user=test_user, name='E2E', key=test_user_totp_key
+            )
 
         Category.objects.get_or_create(
             name='Groceries',
             week_limit=3500,
             month_limit=14000,
             exclude_from_overview=False,
-            is_misc=False
+            is_misc=False,
         )
 
         Category.objects.get_or_create(
@@ -47,7 +47,7 @@ class Command(BaseCommand):
             week_limit=2000,
             month_limit=8000,
             exclude_from_overview=False,
-            is_misc=False
+            is_misc=False,
         )
 
         Category.objects.get_or_create(
@@ -55,9 +55,7 @@ class Command(BaseCommand):
             week_limit=0,
             month_limit=0,
             exclude_from_overview=True,
-            is_misc=True
+            is_misc=True,
         )
 
-        Balance.objects.get_or_create(
-            balance=9999
-        )
+        Balance.objects.get_or_create(balance=9999)
