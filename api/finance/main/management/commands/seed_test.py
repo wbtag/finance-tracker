@@ -21,8 +21,6 @@ class Command(BaseCommand):
         User = get_user_model()
         test_user = User(username=test_user_username)
 
-        print(test_user_password)
-
         test_user.set_password(test_user_password)
         test_user.save()
 
