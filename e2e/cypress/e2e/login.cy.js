@@ -4,10 +4,9 @@ const itWithOtp = otpRequired ? it : it.skip;
 
 const submitCredentials = () => {
 	cy.visit('/');
-
-	cy.get('[name="username"]').type('testuser');
-
-	cy.env(['TEST_USER_PASSWORD']).then(({ TEST_USER_PASSWORD }) => {
+	
+	cy.env(['TEST_USER', 'TEST_USER_PASSWORD']).then(({ TEST_USER, TEST_USER_PASSWORD }) => {
+		cy.get('[name="username"]').type(TEST_USER);
 		cy.get('[name="password"]').type(TEST_USER_PASSWORD);
 	});
 

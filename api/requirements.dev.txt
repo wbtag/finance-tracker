@@ -6,4 +6,3 @@ pytest-cov==7.1.0
 factory-boy==3.3.3
 freezegun==1.5.5
 ruff==0.17.0
-django-extensions==4.1

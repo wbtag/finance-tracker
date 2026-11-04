@@ -3,7 +3,6 @@
 from environs import env
 
 from .base import *
-from .base import INSTALLED_APPS
 
 DEBUG = True
 
@@ -18,6 +17,3 @@ CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
 # Skip the TOTP step locally: set OTP_REQUIRED=false to log in with just
 # username/password.
 OTP_REQUIRED = env.bool('OTP_REQUIRED', False)
-
-INSTALLED_APPS = INSTALLED_APPS if INSTALLED_APPS else []
-INSTALLED_APPS = [*INSTALLED_APPS, 'django_extensions']
