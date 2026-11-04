@@ -19,10 +19,10 @@ Cypress.Commands.add('login', () => {
 		'testuser',
 		() => {
 			cy.request('/api/session');
-			cy.env(['TEST_USER_PASSWORD'])
-				.then(({ TEST_USER_PASSWORD }) => {
+			cy.env(['TEST_USER', 'TEST_USER_PASSWORD'])
+				.then(({ TEST_USER, TEST_USER_PASSWORD }) => {
 					return postWithCsrf('/api/login', {
-						username: 'testuser',
+						username: TEST_USER,
 						password: TEST_USER_PASSWORD,
 					});
 				})

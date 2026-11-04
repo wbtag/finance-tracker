@@ -26,7 +26,11 @@ export default defineConfig({
 	e2e: {
 		baseUrl: 'http://localhost:3000',
 		setupNodeEvents(on, config) {
-			config.env = { ...config.env, TEST_USER_PASSWORD: process.env.TEST_USER_PASSWORD };
+			config.env = {
+				...config.env,
+				TEST_USER: process.env.DATABASE_USER,
+				TEST_USER_PASSWORD: process.env.DATABASE_PASSWORD
+			};
 			// Must match the API's OTP_REQUIRED, which is read from the same environment / .env.
 			config.expose = {
 				...config.expose,
