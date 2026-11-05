@@ -15,6 +15,9 @@
     "lint:api": "cd api && venv/bin/ruff check && venv/bin/ruff format --check",
     "lint:frontend": "cd frontend && pnpm lint && pnpm format:check",
     "format:api": "cd api && venv/bin/ruff check --fix && venv/bin/ruff format",
+    "test": "pnpm test:api && pnpm test:frontend",
+    "test:api": "cd api && venv/bin/pytest --cov=main --cov-report=term-missing",
+    "test:frontend": "cd frontend && pnpm test:run",
     "start:e2e": "export DATABASE_NAME=test && start-server-and-test start \"http://localhost:3000|tcp:localhost:8000\" test:e2e",
     "test:e2e": "pnpm --dir e2e test",
     "db:reset:e2e": "export DATABASE_NAME=test && cd api && venv/bin/python finance/manage.py flush --noinput && venv/bin/python finance/manage.py seed_test"

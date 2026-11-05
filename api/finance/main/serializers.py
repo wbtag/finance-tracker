@@ -8,9 +8,17 @@ from .models import Category, Receipt
 class ReceiptRequestItemsSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
     amount = serializers.IntegerField(min_value=1)
-    tags = serializers.ListField(
-        child=serializers.CharField(max_length=50), required=False, default=list
-    )
+    tags = serializers.ListField(child=serializers.CharField(max_length=50))
+
+    def validate(self, attrs):
+        missing = {
+            name: 'This field is required.'
+            for name, field in self.fields.items()
+            if field.required and name not in attrs
+        }
+        if missing:
+            raise serializers.ValidationError(missing)
+        return attrs
 
 
 class ReceiptRequestSerializer(serializers.Serializer):

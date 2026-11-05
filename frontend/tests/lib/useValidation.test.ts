@@ -225,7 +225,7 @@ describe("isValidDate", () => {
 		expect(isValidDate(new Date().toISOString())).toBe(false);
 	});
 	// TODO: isValidDate only checks the format; flip to it() once it rejects impossible dates
-	it.fails("returns false for impossible date", () => {
+	it("returns false for impossible date", () => {
 		expect(isValidDate("2026-13-45")).toBe(false);
 	});
 });
