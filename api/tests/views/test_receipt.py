@@ -226,7 +226,6 @@ def test_post_reject_extended_receipt_invalid_item_amount(
     assert ReceiptItem.objects.count() == 0
 
 
-@pytest.mark.xfail(strict=True, reason='Known bug: API does not require item tags')
 def test_post_reject_extended_receipt_item_no_tags(auth_client, receipt_base, category):
     response = auth_client.post(
         reverse('receipt'),
@@ -428,7 +427,6 @@ def test_put_extended_reject_invalid_item(auth_client, existing_extended_receipt
     assert item_state(existing_extended_receipt) == [(60, ['item_a']), (40, ['item_b'])]
 
 
-@pytest.mark.xfail(strict=True, reason='Known bug: misconfigured validator')
 def test_put_extended_reject_item_without_amount(
     auth_client, existing_extended_receipt
 ):
@@ -490,7 +488,6 @@ def test_put_reject_invalid_field(auth_client, existing_receipt, category, field
 
 
 def test_put_recalculate_week_year(auth_client, existing_receipt, category):
-
     response = auth_client.put(
         reverse('receipt'), data={'id': existing_receipt.id, 'date': at(2028, 1, 1)}
     )
