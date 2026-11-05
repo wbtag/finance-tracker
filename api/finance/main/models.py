@@ -177,7 +177,7 @@ class Receipt(models.Model):
     ]
 
     date = models.DateTimeField()
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT)
     type = models.CharField(max_length=255, choices=types)
     description = models.CharField(max_length=255)
     amount = models.IntegerField()
