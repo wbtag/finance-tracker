@@ -4,8 +4,8 @@ import React from "react";
 import Navigation from "@/components/ui/Navigation";
 import { getConfig } from "@/components/lib/config";
 import { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
 
-// Config is mounted at runtime, not available during `next build`, so never prerender.
 export const dynamic = "force-dynamic";
 
 export function generateMetadata(): Metadata {
@@ -23,8 +23,10 @@ export default function RootLayout({
 	return (
 		<html lang="cs">
 			<body style={{ backgroundColor: "#09002f" }}>
-				<Navigation appName={getConfig().appName} />
-				{children}
+				<NextIntlClientProvider>
+					<Navigation appName={getConfig().appName} />
+					{children}
+				</NextIntlClientProvider>
 			</body>
 		</html>
 	);

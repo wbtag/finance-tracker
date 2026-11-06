@@ -1,0 +1,117 @@
+{
+	"common": {
+		"currency": "{amount} Kč",
+		"save": "Uložit",
+		"saving": "Ukládá se…",
+		"submit": "Odeslat",
+		"submitting": "Odesílá se…",
+		"cancel": "Zrušit",
+		"edit": "Upravit",
+		"delete": "Smazat",
+		"error": "Chyba: {message}",
+		"selectAll": "Select all",
+		"estimatedBalance": "Aktuální odhadovaný zůstatek",
+		"fields": {
+			"date": "Datum",
+			"category": "Kategorie",
+			"description": "Popis",
+			"amount": "Částka",
+			"tags": "Značky"
+		},
+		"validation": {
+			"descriptionMissing": "Popis chybí",
+			"invalidAmount": "Neplatná částka"
+		}
+	},
+	"navigation": {
+		"overview": "Přehled",
+		"newReceipt": "Nová útrata",
+		"query": "Detail útrat",
+		"weeklySummary": "Týdenní přehled",
+		"balance": "Zůstatek"
+	},
+	"login": {
+		"title": "Přihlášení",
+		"username": "Uživatelské jméno",
+		"password": "Heslo",
+		"submit": "Přihlásit se"
+	},
+	"verify": {
+		"title": "Ověření přihlášení",
+		"code": "Ověřovací kód"
+	},
+	"receiptForm": {
+		"items": "Položky",
+		"addItem": "Přidat další položku",
+		"itemAmountLabel": "Částka položky {index}",
+		"remaining": "Zbývá do celkové částky: {amount}",
+		"validation": {
+			"invalidDate": "Datum není v platném formátu",
+			"itemsAmount": "Hodnota každé položky musí být kladné číslo a součet hodnot položek musí být roven celkové hodnotě účtenky.",
+			"itemsTags": "Každá položka musí mít alespoň jednu značku."
+		}
+	},
+	"newReceipt": {
+		"title": "Nová útrata",
+		"simple": "Základní",
+		"extended": "Rozšířená",
+		"success": "Účtenka úspěšně zaevidována"
+	},
+	"receipt": {
+		"confirmDelete": "Opravdu smazat tuto účtenku?",
+		"date": "Datum:",
+		"tags": "Značky:",
+		"total": "Celkem:",
+		"items": "Položky:"
+	},
+	"query": {
+		"timeframe": "Časový úsek",
+		"timeframes": {
+			"week": "Tento týden",
+			"weekToDate": "Posledních 7 dní",
+			"month": "Tento měsíc",
+			"fiscalMonth": "Fiskální měsíc",
+			"monthToDate": "Poslední měsíc",
+			"allTime": "Od počátku věků",
+			"custom": "Vlastní"
+		},
+		"from": "Datum od",
+		"to": "Datum do",
+		"refresh": "Aktualizovat",
+		"totalSpend": "Celková útrata: {amount} Kč",
+		"noResults": "Žádné výsledky."
+	},
+	"spend": {
+		"thisWeek": "Útrata tento týden",
+		"thisMonth": "Útrata tento měsíc",
+		"week": "Týden",
+		"month": "Měsíc"
+	},
+	"spendTable": {
+		"category": "Kategorie",
+		"spend": "Útrata",
+		"other": "Jiné",
+		"spendOfLimit": "{spend}/{limit} Kč",
+		"progressLabel": "{category}: útrata vůči limitu"
+	},
+	"balance": {
+		"incomeSince": "Příjmy od poslední aktualizace",
+		"spendSince": "Útrata od poslední aktualizace",
+		"balanceAt": "Zůstatek k {date}",
+		"newIncome": "Nový příjem",
+		"update": "Aktualizace zůstatku",
+		"newBalance": "Nový zůstatek",
+		"invalidBalance": "Neplatný zůstatek"
+	},
+	"weeks": {
+		"title": "Týdenní přehled {year}",
+		"year": "Rok",
+		"weekNumber": "{week}. týden",
+		"detail": "Detail →"
+	},
+	"weekDetail": {
+		"title": "{week}. týden roku {year}",
+		"noReceipts": "Žádné účtenky.",
+		"total": "Celkem"
+	}
+}

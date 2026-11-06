@@ -1,0 +1,118 @@
+{
+	"common": {
+		"currency": "{amount} Kč",
+		"save": "Save",
+		"saving": "Saving...",
+		"submit": "Submit",
+		"submitting": "Submitting...",
+		"cancel": "Cancel",
+		"edit": "Edit",
+		"delete": "Delete",
+		"error": "Error: {message}",
+		"selectAll": "Select all",
+		"estimatedBalance": "Current estimated balance",
+		"fields": {
+			"date": "Date",
+			"category": "Category",
+			"description": "Description",
+			"amount": "Amount",
+			"tags": "Tags"
+		},
+		"validation": {
+			"descriptionMissing": "Description is missing",
+			"invalidAmount": "Invalid amount"
+		}
+	},
+	"navigation": {
+		"overview": "Overview",
+		"newReceipt": "New expense",
+		"query": "Spending details",
+		"weeklySummary": "Weekly summary",
+		"balance": "Balance"
+	},
+	"login": {
+		"title": "Login",
+		"username": "Username",
+		"password": "Password",
+		"submit": "Log in"
+	},
+	"verify": {
+		"title": "Login verification",
+		"code": "Verification code"
+	},
+	"receiptForm": {
+		"items": "Items",
+		"addItem": "Add another item",
+		"itemAmountLabel": "Item {index} amount",
+		"remaining": "Remaining to total: {amount}",
+		"validation": {
+			"invalidDate": "Date is not in a valid format",
+			"itemsAmount": "Each item's amount must be a positive number, and the item amounts must add up to the receipt total.",
+			"itemsTags": "Each item must have at least one tag."
+		}
+	},
+	"newReceipt": {
+		"title": "New expense",
+		"simple": "Basic",
+		"extended": "Extended",
+		"success": "Receipt saved successfully"
+	},
+	"receipt": {
+		"confirmDelete": "Really delete this receipt?",
+		"date": "Date:",
+		"tags": "Tags:",
+		"total": "Total:",
+		"items": "Items:"
+	},
+	"query": {
+		"timeframe": "Timeframe",
+		"timeframes": {
+			"week": "This week",
+			"weekToDate": "Last 7 days",
+			"month": "This month",
+			"fiscalMonth": "Fiscal month",
+			"monthToDate": "Last month",
+			"allTime": "Since the dawn of time",
+			"custom": "Custom"
+		},
+		"from": "Date from",
+		"to": "Date to",
+		"refresh": "Update",
+		"totalSpend": "Total spend: {amount} Kč",
+		"noResults": "No results."
+	},
+	"spend": {
+		"thisWeek": "Spent this week",
+		"thisMonth": "Spent this month",
+		"week": "Week",
+		"month": "Month"
+	},
+	"spendTable": {
+		"category": "Category",
+		"spend": "Spend",
+		"other": "Other",
+		"spendOfLimit": "{spend}/{limit} Kč",
+		"progressLabel": "{category}: spend against limit"
+	},
+	"balance": {
+		"incomeSince": "Income since last update",
+		"spendSince": "Spend since last update",
+		"balanceAt": "Balance as of {date}",
+		"estimatedBalance": "Current estimated balance",
+		"newIncome": "New income",
+		"update": "Balance update",
+		"newBalance": "New balance",
+		"invalidBalance": "Invalid balance"
+	},
+	"weeks": {
+		"title": "Weekly summary {year}",
+		"year": "Year",
+		"weekNumber": "Week {week}",
+		"detail": "Detail →"
+	},
+	"weekDetail": {
+		"title": "Week {week} of {year}",
+		"noReceipts": "No receipts.",
+		"total": "Total"
+	}
+}

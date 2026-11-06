@@ -4,6 +4,7 @@ import { parse, TomlError } from "smol-toml";
 
 export interface AppConfig {
 	appName: string;
+	language: string;
 	fiscalMonthStart: number;
 	sundayWeekStart: boolean;
 }
@@ -12,7 +13,7 @@ const CONFIG_PATH =
 	process.env.CONFIG_PATH ?? path.resolve(process.cwd(), "..", "config.toml");
 
 type RawConfig = {
-	App?: { name?: string };
+	App?: { name?: string; language?: string };
 	Budgets?: { month_start?: unknown; sunday_week_start?: unknown };
 };
 
@@ -60,7 +61,12 @@ function loadConfig(): AppConfig {
 		throw new Error(`App.name must be a non-empty string, got ${appName}`);
 	}
 
-	return { fiscalMonthStart, sundayWeekStart, appName };
+	const language = raw.App?.language;
+	if (typeof language !== "string" || !language) {
+		throw new Error(`Language must be a non-empty string, got ${language}`);
+	}
+
+	return { fiscalMonthStart, sundayWeekStart, appName, language };
 }
 
 export function getConfig(): AppConfig {
